@@ -1,0 +1,156 @@
+{
+ "FECHOU": {
+  "arq": "fechou",
+  "sha1": "2381c3976c32c3c9edf0bb260fee31cb92e0c4d1",
+  "taxa": 9000,
+  "versao": 2,
+  "amostras": 6288
+ },
+ "ABRIU": {
+  "arq": "iih-abriu",
+  "sha1": "dac28154d6b4fcd21ad967654c67937531b25ba8",
+  "taxa": 9000,
+  "versao": 2,
+  "amostras": 8192
+ },
+ "CRU": {
+  "arq": "tá-cru",
+  "sha1": "ff0bf46b2f3d1c62e57542799e67f5cb5dc183bc",
+  "taxa": 9000,
+  "versao": 2,
+  "amostras": 7312
+ },
+ "QUEIMOU": {
+  "arq": "queimou",
+  "sha1": "dbcc89446306f7cdc51b239b51432533899f4c18",
+  "taxa": 9000,
+  "versao": 2,
+  "amostras": 9488
+ },
+ "OLHA": {
+  "arq": "olha-o-pastel",
+  "sha1": "85602b759959598655c86d4fb2a185689f4483be",
+  "taxa": 9000,
+  "versao": 2,
+  "amostras": 8768
+ },
+ "ESSENAO": {
+  "arq": "esse-não",
+  "sha1": "38365ab3626c4b9a81de557909c2c8dd7c82daf3",
+  "taxa": 9000,
+  "versao": 2,
+  "amostras": 11664
+ },
+ "REFRI": {
+  "arq": "com-refri",
+  "sha1": "4524862010f769fa46174d25aa4ee706d71939dc",
+  "taxa": 9000,
+  "versao": 2,
+  "amostras": 7536
+ },
+ "TOP": {
+  "arq": "top-demais",
+  "sha1": "7edc4541686c46fb4c1f5babf3cd5476254f6a45",
+  "taxa": 9000,
+  "versao": 2,
+  "amostras": 23408
+ },
+ "QUEBROU": {
+  "arq": "quebrou-o-cesto",
+  "sha1": "2b17f6906a6eb8f1ba6bc52433fbcf0854bf0169",
+  "taxa": 10000,
+  "versao": 2,
+  "amostras": 9984
+ },
+ "DESISTIU": {
+  "arq": "ih-desistiu",
+  "sha1": "6561f837691b02bba0e8a90443edca8d1868c479",
+  "taxa": 10000,
+  "versao": 2,
+  "amostras": 14064
+ },
+ "TELEFONE": {
+  "arq": "los-pastelles-qual-o-pedido(telefone)",
+  "sha1": "4d7485d1214ec2066f23840248a89d4ae8f381aa",
+  "taxa": 10000,
+  "versao": 2,
+  "amostras": 15328
+ },
+ "BOMDIA": {
+  "arq": "bom-dia-freguesia",
+  "sha1": "32adee5b98f1bfbed78914a4939206ebc6e39b95",
+  "taxa": 10000,
+  "versao": 2,
+  "amostras": 14224
+ },
+ "PORHOJE": {
+  "arq": "por-hoje-é-só",
+  "sha1": "bd5925f740f27243011b66d3d89e62d0d397d6ba",
+  "taxa": 10000,
+  "versao": 2,
+  "amostras": 9168
+ },
+ "MISSAO": {
+  "arq": "missao-cumprida",
+  "sha1": "ed5deec4c584fef22d2e2f04b6cfc045e8666f3a",
+  "taxa": 10000,
+  "versao": 2,
+  "amostras": 11696
+ },
+ "TROFEU": {
+  "arq": "troféu",
+  "sha1": "fe7f70f107a9acd493bd574c01418fd2b1e48ab3",
+  "taxa": 10000,
+  "versao": 2,
+  "amostras": 19520
+ },
+ "DESAFIO": {
+  "arq": "desafio",
+  "sha1": "4b1c15916598489ec584b7dc8d1178a9222c4749",
+  "taxa": 10000,
+  "versao": 2,
+  "amostras": 10896
+ },
+ "VITORIA": {
+  "arq": "vitória",
+  "sha1": "68ead656f1fd69d5ec682602e236133ae1d9c5e5",
+  "taxa": 10000,
+  "versao": 2,
+  "amostras": 8592
+ },
+ "DERROTA": {
+  "arq": "ah-não-foi-dessa-vez",
+  "sha1": "59003c6819106fbe1aa5d843fd7fad06d8e2ecf7",
+  "taxa": 10000,
+  "versao": 2,
+  "amostras": 16624
+ },
+ "IMPERIO": {
+  "arq": "parabéns-o-império-é-seu",
+  "sha1": "888a4b29862fa619311a441d319b954392136bde",
+  "taxa": 10000,
+  "versao": 2,
+  "amostras": 18544
+ },
+ "TITULO": {
+  "arq": "los-pasteles-o-imperio-do-pastel",
+  "sha1": "24f7cae2ec5347ee246498b84a3a7db4bad667f6",
+  "taxa": 10000,
+  "versao": 2,
+  "amostras": 24864
+ },
+ "TEMA": {
+  "arq": "pastelito-theme-song-1min",
+  "sha1": "5ce05036adc1c2e6f1e18dd8ed1a410c76562837",
+  "taxa": 10000,
+  "versao": 2,
+  "amostras": 609008
+ },
+ "FRITURA": {
+  "arq": "shhhh(barulho-da-fritura)",
+  "sha1": "6f03d0505151643250ee163914e39f136c845897",
+  "taxa": 9000,
+  "versao": 2,
+  "amostras": 4496
+ }
+}

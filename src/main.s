@@ -1,6 +1,6 @@
 ; =====================================================================
 ;  LOS PASTELLES: O IMPERIO DO PASTEL  -  ROM de Super Nintendo
-;  Montador: ca65 (cc65).  Mapa: LoROM FastROM, 256 KB, 2 KB SRAM
+;  Montador: ca65 (cc65).  Mapa: LoROM SlowROM, 1 MB, 2 KB SRAM
 ;  Convencao: A 8 bits / X,Y 16 bits, DBR = $80, D = $0000
 ; =====================================================================
 .p816
@@ -18,6 +18,8 @@ BG12NBA  = $210B
 BG34NBA  = $210C
 BG1HOFS  = $210D
 BG1VOFS  = $210E
+BG2HOFS  = $210F
+BG2VOFS  = $2110
 BG3HOFS  = $2111
 BG3VOFS  = $2112
 VMAIN    = $2115
@@ -46,6 +48,7 @@ VRAM_BG1TILES = $0000
 VRAM_BG3TILES = $4000
 VRAM_BG1MAP   = $5000
 VRAM_BG3MAP   = $5400
+VRAM_BG2MAP   = $5800   ; xadrez dos menus
 VRAM_OBJ      = $6000
 
 ; botoes (byte alto de pad)
@@ -105,6 +108,7 @@ tmp_note:   .res 1
 tmp_vreg:   .res 1
 tmp_pitch:  .res 2
 apu_cnt:    .res 1
+apu_ult:    .res 1      ; ultimo valor enviado na porta 0 (espera o eco dele)
 kon_pend:   .res 1
 kof_pend:   .res 1
 cur_song:   .res 1
@@ -114,6 +118,13 @@ sizzle_want:.res 1
 lag_count:  .res 2
 dim_on:     .res 1
 tw_ptr:     .res 3      ; texto letra por letra (ponteiro longo)
+vz_ptr:     .res 3      ; falas: ponteiro longo na ROM (src/voz.s)
+mu_ptr:     .res 3      ; musica gravada: ponteiro longo na ROM
+lt_b0:      .res 1      ; lote do stream (src/voz.s)
+lt_b1:      .res 1
+lt_b2:      .res 1
+lt_n:       .res 2
+lt_ant:     .res 2
 
 .segment "BSS"
 oam_buf:    .res 544
@@ -186,6 +197,8 @@ FastReset:
     sta BG1SC
     lda #(VRAM_BG3MAP >> 8)
     sta BG3SC
+    lda #(VRAM_BG2MAP >> 8)
+    sta BG2SC
     lda #(VRAM_BG1TILES >> 12)
     sta BG12NBA
     lda #(VRAM_BG3TILES >> 12)
@@ -244,6 +257,7 @@ MainLoop:
     jsr AudioUpdate
     jsr WaitFrame
     jsr ReadPad
+    jsr DemoControle        ; demonstracao: a CPU joga (ou um botao encerra)
     bra MainLoop
 
 ; ---------------------------------------------------------------- NMI
@@ -327,6 +341,8 @@ NmiFast:
     inc lag_count
     A8
 @upd:
+    stz $212E               ; janelas (so o tutorial usa)
+    stz $2123
     ; escurece o cenario na pausa (subtracao de cor no BG1 e sprites)
     lda dim_on
     beq @nodim
@@ -340,6 +356,7 @@ NmiFast:
     cmp #2
     lda #$EC
     bcc :+
+    jsr TutNmi
     lda #$F6
 :   sta $2132
     bra @dimd
@@ -486,7 +503,8 @@ WaitFrame:
     .i16
     lda #1
     sta nmi_ready
-@w: lda nmi_ready
+@w: jsr Bomba               ; tempo ocioso: alimenta os streams (falas e musica)
+    lda nmi_ready
     bne @w
     rts
 
@@ -650,6 +668,12 @@ PrintStrB:
     bra @lp
 @ch:
     sta bg3_buf,x
+    cmp #FONT_BTN0
+    bcc @attr
+    cmp #(FONT_BTN0+N_BTN)
+    bcs @attr
+    jsr BtnReg              ; botao: o sprite colorido e desenhado por cima
+@attr:
     lda txt_attr
     sta bg3_buf+1,x
     inx
@@ -783,7 +807,7 @@ AddSprite:
 @ok:
     A8
     ldx oam_idx
-    cpx #512
+    cpx #OAM_BTN            ; os ultimos slots ficam para os botoes do texto
     bcs @skip
     lda spr_x
     sta oam_buf,x
@@ -898,11 +922,13 @@ LoadBasePalettes:
     rts
 
 .include "src/audio.s"
+.include "src/voz.s"
 .include "src/game.s"
 .include "src/telas.s"
 .include "src/extra.s"
 .include "src/segredo.s"
 .include "src/ui.s"
+.include "src/demo.s"
 
 ; ---------------------------------------------------------------- dados
 .segment "RODATA"
@@ -932,6 +958,7 @@ IconGfx:    .incbin "gen/icon_tiles.bin"
 IconGfx_end:
 IconPal:    .incbin "gen/icon_pal.bin"
 .include "gen/icon_pal.inc"
+.include "gen/voz.inc"         ; tabelas das vozes (acesso longo, f:)
 .segment "BANK11"
 .include "gen/cards.inc"
 
@@ -942,6 +969,14 @@ MenuTiles_end:
     .i16
 MenuMap:    .incbin "gen/menu_map.bin"
 MenuPal:    .incbin "gen/menu_pal.bin"
+MenuChkTiles: .incbin "gen/menu_chk_tiles.bin"
+MenuChkTiles_end:
+MenuChkMap:   .incbin "gen/menu_chk_map.bin"
+ChkPal:     .incbin "gen/chk_pal.bin"
+TutTiles:   .incbin "gen/tut_tiles.bin"
+TutTiles_end:
+TutMap:     .incbin "gen/tut_map.bin"
+TutPal:     .incbin "gen/tut_pal.bin"
 
 .segment "BANK3"
 TitleTiles: .incbin "gen/title_tiles.bin"
@@ -1034,6 +1069,9 @@ Shop4_2Tiles: .incbin "gen/shop4_2_tiles.bin"
 Shop4_2Tiles_end:
 Shop4_2Map:   .incbin "gen/shop4_2_map.bin"
 Shop4_2Pal:   .incbin "gen/shop4_2_pal.bin"
+
+; vozes e musica gravadas (bancos 13+)
+.include "gen/sons.inc"
 
 ; ---------------------------------------------------------------- cabecalho
 .segment "HEADER"

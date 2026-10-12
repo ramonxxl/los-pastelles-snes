@@ -1,4 +1,6 @@
-local out = io.open("C:/Users/ramon/Desktop/Jogo Snes/teste/ram.txt", "w")
+-- pasta teste/ (descoberta pelo caminho do script; senao, relativo a raiz do repositorio)
+local dir = (debug and debug.getinfo and (debug.getinfo(1, "S").source or ""):match("^@(.*[/\\])")) or "teste/"
+local out = io.open(dir .. "ram.txt", "w")
 local done = false
 emu.addMemoryCallback(function()
   if done then return end

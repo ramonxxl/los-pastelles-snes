@@ -81,6 +81,13 @@ const G = {
   '▶': ['#....', '##...', '###..', '####.', '###..', '##...', '#....'],
 };
 
+// botoes do controle no meio do texto: {A} {B} {X} {Y} {CIMA} {BAIXO} {ESQ} {DIR}
+// viram glifos vazios (codigos FONT_BTN0..) e o jogo desenha por cima um sprite
+// colorido do botao (BtnSprites em ui.s), igual aos botoes do minijogo
+const BOTOES = ['A', 'B', 'X', 'Y', 'CIMA', 'BAIXO', 'ESQ', 'DIR'];
+const btnChar = (i) => String.fromCharCode(0xE000 + i);
+BOTOES.forEach((_, i) => { G[btnChar(i)] = ['.....', '.....', '.....', '.....', '.....', '.....', '.....']; });
+
 // ordem explicita (chaves numericas de objeto JS vem primeiro); espaco = 0
 const DIG = '0123456789'.split('');
 const ORDER = [' ', ...Object.keys(G).filter((k) => k !== ' ' && !DIG.includes(k)), ...DIG];
@@ -121,6 +128,11 @@ const FONT_BOX = ORDER.length;
 // compila string -> bytes (FE = nova linha, FF = fim)
 function compile(s) {
   const b = [];
+  s = s.replace(/\{([A-Z]+)\}/g, (m, n) => {
+    const i = BOTOES.indexOf(n);
+    if (i < 0) throw new Error('botao desconhecido: ' + m + ' em: ' + s);
+    return btnChar(i);
+  });
   for (const ch of s.toUpperCase()) {
     if (ch === '\n') { b.push(0xFE); continue; }
     if (!(ch in CODE)) throw new Error('caractere sem glifo: "' + ch + '" em: ' + s);
@@ -130,4 +142,6 @@ function compile(s) {
   return b;
 }
 
-module.exports = { fontTiles, compile, CODE, FONT_BOX, GLYPHS: G, ORDER };
+const FONT_BTN0 = CODE[btnChar(0)];
+
+module.exports = { fontTiles, compile, CODE, FONT_BOX, GLYPHS: G, ORDER, BOTOES, FONT_BTN0 };

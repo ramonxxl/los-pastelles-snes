@@ -8,7 +8,7 @@ function SHOP(r8, r16, f)
   local sel = r8("menu_sel")
   local money = r16("s_money") + 65536 * r16("s_money", 2)
   local lvl = r8("s_level")
-  local target = 18
+  local target = 19                 -- abrir a loja (18 = voltar ao menu)
   if not trofdone then target = 17
   elseif not mapdone and r8("s_stores") >= 1 then target = 16
   elseif r8("s_price") == 1 then target = 15

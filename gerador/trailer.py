@@ -12,7 +12,7 @@ Q = os.path.join(TR, 'quadros2')
 AU = os.path.join(TR, 'audio')
 FF = imageio_ffmpeg.get_ffmpeg_exe()
 W, H, FPS, RATE = 1920, 1080, 30, 32000
-F = 'C:/Windows/Fonts/'
+F = os.environ.get('FONTES', 'C:/Windows/Fonts/').rstrip('/\\') + '/'  # pasta das fontes (impact, arial...)
 LARANJA, CREME, MARROM, VERMELHO = (250, 166, 30), (253, 241, 224), (58, 26, 12), (218, 72, 4)
 
 def fonte(n, t): return ImageFont.truetype(F + n, t)

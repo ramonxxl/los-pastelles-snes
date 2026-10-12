@@ -47,21 +47,11 @@ DayInit:
     jsr DrawHud
     jsr DayDraw
     jsr ScreenOn
-    lda d_boss
-    cmp #$FF
-    beq :+
-    lda #SONG_CHEFE
-    bra :+++
-:   ldx #0
-    lda s_boss
-    beq :+
-    inx
-    cmp #3
-    bcc :+
-    inx
-:   lda DaySongs,x
-:   jsr PlaySong
+    jsr StopMusic           ; expediente: musica gravada (no lugar do chiptune)
+    jsr MusToca
     jsr FadeIn
+    lda #VOZ_BOMDIA
+    jsr VozToca
     ldx #TXT_M_BEMVINDO
     jsr ShowMsg
     rts
@@ -129,7 +119,7 @@ SetupDay:
     stx d_dvsales
     ldx #600
     stx dv_spawn
-    ; tutorial guiado so no primeiro dia
+    ; tutorial guiado so no primeiro dia, e so ate ser concluido uma vez neste jogo salvo
     lda #$FF
     sta tut_step
     stz tut_box
@@ -139,8 +129,12 @@ SetupDay:
     cmp #1
     A8
     bne :+
+    lda s_tflags
+    and #TUT_BIT
+    bne :+
     stz tut_step
 :
+    jsr DemoDia             ; (demonstracao: comeca as 14h, sem cesto quebrado)
     ; quando quebra um cesto: desafio 3 aos 30 s; nos dias normais 1 em 4 (a partir do dia 4)
     ldx #$FFFF
     stx d_breakat
@@ -310,7 +304,6 @@ SetupDay:
     sta d_goal
 :   rts
 
-DaySongs:    .byte SONG_DIA, SONG_DIA2, SONG_DIA3
 FrySpeed:    .word 96, 112, 136
 ; paciencia base: facil / normal / dificil (65536/taxa = quadros de espera)
 PatBase:     .word 28, 40, 56
@@ -483,6 +476,8 @@ PauseMenu:
     rts
 
 ; ---------------------------------------------------------------- tutorial do primeiro dia
+TUT_BIT = $08           ; s_tflags: tutorial ja concluido neste jogo salvo
+
 TutTxt: .word TXT_TUT_0, TXT_TUT_0, TXT_TUT_2, TXT_TUT_3, TXT_TUT_4
 
 Tutorial:
@@ -502,6 +497,11 @@ Tutorial:
     beq @nofim
     lda #$FF
     sta tut_step
+    ; primeira entrega: tutorial concluido, nao aparece mais (ja grava na SRAM,
+    ; mesmo que o jogador saia antes do fim do dia)
+    lda #TUT_BIT
+    tsb s_tflags
+    jsr SaveTFlags
     lda #5
     jmp TutBox
 @nofim:
@@ -610,7 +610,7 @@ TutBox:
     A8
     ldy #(9*32+4)
     sty txt_pos
-    lda #((1<<2)|$20)
+    lda #((5<<2)|$20)       ; titulo vermelho (cores das caixas: o balao e creme)
     sta txt_attr
     jsr PrintStr
     A16
@@ -621,7 +621,7 @@ TutBox:
     A8
     ldy #(11*32+4)
     sty txt_pos
-    lda #$20
+    lda #((4<<2)|$20)
     sta txt_attr
     jsr PrintStr
     lda #45                 ; espera antes de aceitar o A (evita pular sem ler)
@@ -655,7 +655,9 @@ TutBoxUpdate:
     lda tut_box
     cmp #1
     bne @r
-    PRINT TXT_C_A, 10, 17, 1
+    ldx #TXT_C_A
+    lda #17
+    jsr Footer
 @r: rts
 @rdy:
     lda pad_new
@@ -794,6 +796,8 @@ DayMission:
     pla
     cmp s_mission
     beq :+
+    lda #VOZ_MISSAO
+    jsr VozToca
     ldx #TXT_M_MISSAO
     jsr ShowMsg
     SFX SFX_NIVEL
@@ -804,7 +808,11 @@ DayMission:
 DayClock:
     .a8
     .i16
-    A16
+    lda tut_step            ; tutorial guiado: o relogio fica parado
+    cmp #$FF
+    beq :+
+    rts
+:   A16
     inc d_timer
     A8
     inc d_sub
@@ -840,7 +848,9 @@ DayClock:
     beq :+
     stz f_state,x
     inc d_waste
-:   ldx #TXT_M_QUEBROU
+:   lda #VOZ_QUEBROU
+    jsr VozToca
+    ldx #TXT_M_QUEBROU
     jsr ShowMsgBad
     SFX SFX_ALARME
 @nob:
@@ -851,6 +861,8 @@ DayClock:
     bcc @rts
     lda #1
     sta d_closed
+    lda #VOZ_PORHOJE
+    jsr VozToca
     ldx #TXT_M_FECHOU
     jsr ShowMsg
     SFX SFX_SINO
@@ -886,7 +898,11 @@ DayClock:
 DayInput:
     .a8
     .i16
-    lda pad_new+1
+    lda tut_step
+    cmp #$FF
+    beq :+
+    jmp TutInput
+:   lda pad_new+1
     and #KH_LEFT
     beq @nl
     jsr CurCount
@@ -960,6 +976,8 @@ DayInput:
     bne @nx
     lda #1
     sta hold_soda
+    lda #VOZ_REFRI
+    jsr VozToca
     ldx #TXT_M_REFRI
     jsr ShowMsg
     SFX SFX_PEGAR
@@ -975,6 +993,69 @@ DayInput:
     jsr ActionA
 @na:
     rts
+
+; tutorial guiado: o jogo poe o cursor no lugar certo de cada passo e so aceita o A
+; na hora certa (direcionais, B, X e Y nao fazem nada)
+TUT_PONTO = 185             ; o pastel para aqui (meio do ponto perfeito, 160..209)
+TutInput:
+    .a8
+    .i16
+    ; pastel na mao: entregar ao cliente (o cursor vai ate ele)
+    lda hold_flav
+    cmp #$FF
+    beq @semmao
+    jsr AutoTarget
+    lda pad_new
+    and #KL_A
+    beq @r
+    jmp ServeCustomer
+@semmao:
+    ; pastel no oleo: cursor no cesto; A so com o pastel no ponto
+    ldx #0
+@cesto:
+    lda f_state,x
+    bne @frit
+    inx
+    cpx #4
+    bne @cesto
+    ; nada ainda: cursor no sabor carne; A so com o cliente na loja
+    lda #1
+    sta cur_row
+    stz cur_col1
+    lda pad_new
+    and #KL_A
+    beq @r
+    ldx #0
+:   lda c_state,x
+    bne @ok
+    inx
+    cpx #4
+    bne :-
+    bra @nao
+@frit:
+    lda #1
+    sta cur_row
+    txa
+    clc
+    adc n_flav
+    sta cur_col1
+    lda pad_new
+    and #KL_A
+    beq @r
+    A16
+    txa
+    asl a
+    tay
+    lda f_prog,y
+    A8
+    xba
+    cmp #160
+    bcc @nao                ; ainda cru: espera a barra ficar verde
+@ok:
+    jmp ActionA
+@nao:
+    SFX SFX_ERRO
+@r: rts
 
 CurCount:
     .a8
@@ -1168,10 +1249,14 @@ MiniStart:
 MiniGame:
     .a8
     .i16
+    lda tut_step            ; tutorial: o tempo nao corre
+    cmp #$FF
+    bne @semtempo
     A16
     dec mg_timer
     A8
     beq @fail
+@semtempo:
     A16
     lda pad_new
     and #$CFC0
@@ -1189,13 +1274,19 @@ MiniGame:
     lda MgMask,x
     and tmp
     A8
-    beq @fail
+    beq @errou
     inc mg_pos
     lda mg_pos
     cmp mg_len
     bcs @ok
     SFX SFX_CURSOR
 @draw:
+    jmp MiniDraw
+@errou:
+    lda tut_step            ; tutorial: so avisa e espera o botao certo
+    cmp #$FF
+    beq @fail
+    SFX SFX_ERRO
     jmp MiniDraw
 @ok:
     stz mg_on
@@ -1207,7 +1298,9 @@ MiniGame:
     jsr ShowMsg
     SFX SFX_OK
     rts
-:   ldx #TXT_M_FECHADO
+:   lda #VOZ_FECHOU
+    jsr VozToca
+    ldx #TXT_M_FECHADO
     jsr ShowMsg
     lda mg_flav
     jmp PutInFryer
@@ -1227,6 +1320,8 @@ MiniGame:
     A8
 :
     inc d_waste
+    lda #VOZ_ABRIU
+    jsr VozToca
     ldx #TXT_M_ABRIU
     jsr ShowMsgBad
     SFX SFX_LIXO
@@ -1432,6 +1527,8 @@ TakeFromBasket:
     beq @ruim
     cmp #Q_QUEIM
     beq @ruim
+    lda #VOZ_OLHA
+    jsr VozToca
     jsr AutoTarget
     bcs :+
     jsr DvWants
@@ -1442,6 +1539,15 @@ TakeFromBasket:
     jsr ShowMsg
 :   rts
 @ruim:
+    lda hold_q              ; cru ou queimado
+    cmp #Q_CRU
+    bne @queim
+    lda #VOZ_CRU
+    bra @fala
+@queim:
+    lda #VOZ_QUEIMOU
+@fala:
+    jsr VozToca
     ldx #TXT_M_RUIM
     jmp ShowMsgBad
 
@@ -1569,6 +1675,8 @@ ServeCustomer:
     A8
     lda #1
     jsr RepDown
+    lda #VOZ_ESSENAO
+    jsr VozToca
     ldx #TXT_M_ERRADO
     jsr ShowMsgBad
     SFX SFX_ERRO
@@ -1738,6 +1846,8 @@ ServeCustomer:
     jsr ShowMsg
     bra @tip
 @nomyst:
+    lda #VOZ_TOP
+    jsr VozToca
     ldx #TXT_M_PERF
     jsr ShowMsg
     bra @tip
@@ -2000,7 +2110,12 @@ RepDown:
 DaySpawn:
     .a8
     .i16
-    lda d_closed
+    lda tut_step            ; tutorial: um cliente so (o primeiro pedido)
+    cmp #$FF
+    beq :+
+    lda d_total
+    bne @rts
+:   lda d_closed
     bne @rts
     A16
     lda d_spawn
@@ -2170,7 +2285,18 @@ DaySpawn:
     lda #1
     sta c_combo,x
 @cnt:
-    jsr SetRate
+    lda tut_step            ; tutorial: pedido simples de carne
+    cmp #$FF
+    beq :+
+    stz c_order,x
+    stz c_combo,x
+    lda #1
+    sta c_qty,x
+    lda c_var,x
+    cmp #4
+    bcc :+
+    stz c_var,x             ; nem misterioso nem turista
+:   jsr SetRate
     inc d_total
     jsr NextInterval
     rts
@@ -2365,7 +2491,10 @@ CustUpdate:
 @n1:
     cmp #2
     bne @leave
-    ; esperando
+    ; esperando (no tutorial a paciencia nao cai)
+    lda tut_step
+    cmp #$FF
+    bne @next
     A16
     lda c_pat,y
     sec
@@ -2384,6 +2513,8 @@ CustUpdate:
     sta c_timer,x
     lda #3
     jsr RepDown
+    lda #VOZ_DESISTIU
+    jsr VozToca
     ldx #TXT_M_FOI
     jsr ShowMsgBad
     SFX SFX_BRAVO
@@ -2416,6 +2547,12 @@ FryUpdate:
     .a8
     .i16
     stz sizzle_want
+    ldx #$FFFF
+    lda tut_step
+    cmp #$FF
+    beq :+
+    ldx #(TUT_PONTO << 8)
+:   stx fry_lim
     ldx #0
 @lp:
     lda f_state,x
@@ -2432,6 +2569,9 @@ FryUpdate:
     adc d_speed
     bcc :+
     lda #$FFFF
+:   cmp fry_lim
+    bcc :+
+    lda fry_lim
 :   sta f_prog,y
     A8
     xba
@@ -3014,6 +3154,8 @@ YAction:
     jsr DvCreate
     ldx #0
     stx ph_ring
+    lda #VOZ_TELEFONE
+    jsr VozToca
     ldx #TXT_M_ATENDEU
     jsr ShowMsg
     SFX SFX_OK

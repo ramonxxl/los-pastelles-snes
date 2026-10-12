@@ -1,0 +1,154 @@
+# Testes, compilacao e release da ROM.
+#  - push na main: testa e compila; se o VERSION subiu (versao sem tag), publica o
+#    release vX.Y.Z. Commits sem mudanca no VERSION nao geram versao nova.
+#  - pull request: testa e compila uma ROM do PR (artefato para baixar na execucao)
+# Versionamento: ver "Versionamento e releases" no CLAUDE.md.
+name: CI
+
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['**.md', 'cartucho/**', 'trailer/**', '.gitignore']
+  pull_request:
+    paths-ignore: ['**.md', 'cartucho/**', 'trailer/**', '.gitignore']
+  workflow_dispatch:
+
+# na main as execucoes ficam em fila (dois releases nunca disputam a mesma tag);
+# num PR, um push novo cancela a execucao antiga
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+env:
+  MESEN_VERSION: 2.1.1
+
+jobs:
+  build:
+    name: Testes e compilação
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    outputs:
+      version: ${{ steps.versao.outputs.version }}
+      release: ${{ steps.versao.outputs.release }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0   # historico e tags: versoes lancadas e git describe
+
+      - name: Dependências (cc65, Pillow e SDL2 para o Mesen)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends cc65 python3-pil libsdl2-2.0-0
+
+      - name: Cache do Mesen
+        id: mesen
+        uses: actions/cache@v6
+        with:
+          path: teste/mesen/Mesen
+          key: mesen-${{ env.MESEN_VERSION }}-linux-x64
+
+      - name: Baixa o Mesen
+        if: steps.mesen.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p teste/mesen
+          curl -fsSL -o "$RUNNER_TEMP/mesen.zip" \
+            "https://github.com/SourMesen/Mesen2/releases/download/${MESEN_VERSION}/Mesen_${MESEN_VERSION}_Linux_x64.zip"
+          unzip -o -q "$RUNNER_TEMP/mesen.zip" -d teste/mesen
+
+      - name: Versão
+        id: versao
+        env:
+          EVENTO: ${{ github.event_name }}
+          PR: ${{ github.event.pull_request.number }}
+          SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          lancar=$(node gerador/versao.js --lancar)   # vazio se o VERSION ja foi lancado
+          release=false
+          if [ "$EVENTO" = push ] && [ -n "$lancar" ]; then
+            v="$lancar"; release=true
+          elif [ "$EVENTO" = pull_request ]; then
+            v="$(tr -d '[:space:]' < VERSION)-pr.$PR+${SHA::7}"
+          else
+            v=$(node gerador/versao.js)              # ex.: 0.0.2-dev.3+abc1234
+          fi
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+          echo "release=$release" >> "$GITHUB_OUTPUT"
+          echo "GAME_VERSION=$v" >> "$GITHUB_ENV"
+          echo "Versão desta compilação: $v (release: $release)"
+
+      - name: Compila (inclui o verificador de largura do 65816)
+        run: node build.js
+
+      - name: Teste automático (robô joga no Mesen)
+        run: |
+          chmod +x teste/mesen/Mesen
+          # modo portatil: controle na porta 1 e acesso a arquivos para o script Lua
+          printf '%s' '{"Snes":{"Port1":{"Type":"SnesController"}},"Debug":{"ScriptWindow":{"AllowIoOsAccess":true}}}' > teste/mesen/settings.json
+          rm -rf teste/mesen/Saves      # cada teste comeca sem jogo salvo
+          set +e
+          LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libstdc++.so.6 \
+            timeout 600 teste/mesen/Mesen --testrunner LosPastelles.sfc teste/ci.lua
+          codigo=$?
+          set -e
+          cat teste/ci.txt 2>/dev/null || echo "teste/ci.txt nao foi gerado"
+          { echo '### Teste automático'; echo '```'; cat teste/ci.txt 2>/dev/null; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          if [ "$codigo" -ne 0 ]; then
+            echo "::error::Teste automático falhou (código $codigo)"
+            tail -n 20 teste/bot.txt 2>/dev/null || true
+            exit 1
+          fi
+
+      - name: Teste do tutorial guiado (jogador que tenta errar)
+        run: |
+          rm -rf teste/mesen/Saves      # o save do teste anterior pularia o tutorial
+          set +e
+          LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libstdc++.so.6 \
+            timeout 300 teste/mesen/Mesen --testrunner LosPastelles.sfc teste/tutorial.lua
+          codigo=$?
+          set -e
+          cat teste/tutorial.txt 2>/dev/null || echo "teste/tutorial.txt nao foi gerado"
+          { echo '### Tutorial guiado'; echo '```'; cat teste/tutorial.txt 2>/dev/null; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          if [ "$codigo" -ne 0 ]; then echo "::error::Teste do tutorial falhou (código $codigo)"; exit 1; fi
+
+      - name: Prepara a ROM
+        run: cp LosPastelles.sfc "LosPastelles-${{ steps.versao.outputs.version }}.sfc"
+
+      - name: Envia a ROM (artefato)
+        id: artefato
+        uses: actions/upload-artifact@v7
+        with:
+          # sem zip: o artefato e o proprio .sfc (e leva o nome do arquivo)
+          path: LosPastelles-${{ steps.versao.outputs.version }}.sfc
+          archive: false
+          retention-days: 14
+          if-no-files-found: error
+
+      - name: Resumo
+        run: |
+          echo "### ROM ${{ steps.versao.outputs.version }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "[Baixar LosPastelles-${{ steps.versao.outputs.version }}.sfc](${{ steps.artefato.outputs.artifact-url }})" >> "$GITHUB_STEP_SUMMARY"
+
+  release:
+    name: Release
+    needs: build
+    if: needs.build.outputs.release == 'true' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: LosPastelles-${{ needs.build.outputs.version }}.sfc
+
+      - name: Publica o release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          V: ${{ needs.build.outputs.version }}
+        run: |
+          gh release create "v$V" "LosPastelles-$V.sfc" \
+            --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+            --title "Los Pastelles $V" --generate-notes

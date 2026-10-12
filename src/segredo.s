@@ -146,7 +146,9 @@ SecretDraw:
     lda menu_msg
     beq :+
     PRINT TXT_SEC_OK, 3, 21, 6
-:   PRINT TXT_TR_VOLTAR, 3, 24, 4
+:   ldx #TXT_TR_VOLTAR
+    lda #26
+    jsr Footer
     rts
 
 ; mascote dancando no canto

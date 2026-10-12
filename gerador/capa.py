@@ -6,7 +6,7 @@ from PIL import Image, ImageDraw, ImageFont, ImageFilter
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ARTE = os.path.join(ROOT, 'cartucho', 'arte')
 W, H = 1260, 1188          # area de arte da etiqueta (420x396 do modelo, 3x)
-F = 'C:/Windows/Fonts/'
+F = os.environ.get('FONTES', 'C:/Windows/Fonts/').rstrip('/\\') + '/'  # pasta das fontes (impact, arial...)
 random.seed(7)
 
 def spr(nome, escala):

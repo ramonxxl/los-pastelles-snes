@@ -1,4 +1,5 @@
-local dir = "C:/Users/ramon/Desktop/Jogo Snes/teste/"
+-- pasta teste/ (descoberta pelo caminho do script; senao, relativo a raiz do repositorio)
+local dir = (debug and debug.getinfo and (debug.getinfo(1, "S").source or ""):match("^@(.*[/\\])")) or "teste/"
 dofile(dir .. "bot.lua")
 local done = false
 emu.addMemoryCallback(function()

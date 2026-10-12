@@ -1,7 +1,7 @@
 // Arte do jogo: cenarios (BG1) e folha de sprites
 'use strict';
 const { Img, sceneToBG, enc4, tilePixels, palBytes } = require('./gfx');
-const { GLYPHS } = require('./fonte');
+const { GLYPHS, BOTOES } = require('./fonte');
 
 // ---------------------------------------------------------------- texto grande nos cenarios
 function drawText(I, s, x, y, col, scale = 1) {
@@ -256,10 +256,7 @@ const PAL_MENU = [null, '#1C0A04', '#FFF8EC', '#F3DFC0', '#C8A870', '#E88607', '
 function menuScene() {
   const K = 1, C1 = 2, C2 = 3, C3 = 4, R = 5, W = 6, r = 7, B = 8, D = 9, Y = 10;
   const I = new Img(256, 224);
-  for (let y = 0; y < 224; y++) for (let x = 0; x < 256; x++) {
-    const a = (x >> 4) & 1, b = (y >> 4) & 1;
-    I.set(x, y, a && b ? R : (a || b ? ((x + y) & 1 ? R : W) : W));
-  }
+  // fundo transparente: o xadrez fica no BG2 (menuChecker), que rola sozinho
   // painel
   I.rect(10, 10, 240, 206, r);            // sombra
   I.rect(6, 6, 240, 206, K);
@@ -267,6 +264,64 @@ function menuScene() {
   // cantos decorados
   for (const [x, y] of [[14, 14], [234, 14], [14, 200], [234, 200]]) { I.rect(x, y, 6, 6, Y); I.frame(x, y, 6, 6, C3); }
   return I;
+}
+
+// xadrez do fundo dos menus (BG2): 3 tiles (creme, laranja, pontilhado) e mapa 32x32
+// que se repete a cada 4 tiles, para rolar na horizontal sem emenda.
+// tileBase = indice do 1o tile na VRAM; paleta 3 (PAL_MENU carregada la: ChkPal)
+function menuChecker(tileBase) {
+  const R = 5, W = 6;
+  const solid = (c) => new Array(64).fill(c);
+  const dither = Array.from({ length: 64 }, (_, k) => (((k & 7) + (k >> 3)) & 1) ? R : W);
+  const tiles = Buffer.concat([solid(W), solid(R), dither].map(enc4));
+  const map = Buffer.alloc(2048);
+  for (let ty = 0; ty < 32; ty++) for (let tx = 0; tx < 32; tx++) {
+    const a = (tx >> 1) & 1, b = (ty >> 1) & 1;
+    const t = a && b ? 1 : (a || b ? 2 : 0);
+    map.writeUInt16LE((tileBase + t) | (3 << 10), (ty * 32 + tx) * 2);   // paleta 3 (a 2 e do cenario)
+  }
+  return { tiles, map };
+}
+
+// ----- retangulo arredondado e degrade pontilhado (balao do tutorial, pilula dos rodapes)
+const BAYER = [[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]];
+function roundRect(I, x0, y0, w, h, r, cor) {
+  for (let y = y0; y < y0 + h; y++) for (let x = x0; x < x0 + w; x++) {
+    const cx = Math.max(x0 + r, Math.min(x0 + w - 1 - r, x)), cy = Math.max(y0 + r, Math.min(y0 + h - 1 - r, y));
+    const dx = x - cx, dy = y - cy;
+    if (dx * dx + dy * dy <= r * r + r * 0.6) I.set(x, y, typeof cor === 'function' ? cor(x, y) : cor);
+  }
+}
+// cor ao longo de t (0..1) entre os tons de 'tons', com pontilhado ordenado nas passagens
+const degrade = (tons, t, x, y) => {
+  const v = Math.max(0, Math.min(1, t)) * (tons.length - 1);
+  const i = Math.floor(v), f = v - i;
+  return tons[Math.min(tons.length - 1, i + (f * 16 > BAYER[y & 3][x & 3] ? 1 : 0))];
+};
+
+// balao do tutorial (BG2, so no expediente): paleta propria, mesmo visual das caixas
+const PAL_TUT = [null, '#1C0A04', '#8C4A08', '#A85C28', '#C8A870', '#FFFBF2', '#FFF8EC', '#FBF0DC', '#F7E8CE', '#F3DFC0',
+  '#EDD4AE', '#000000', '#000000', '#000000', '#000000', '#000000'];
+const TUT_BOX = { x: 16, y: 64, w: 224, h: 88 };
+function tutBalloon() {
+  const I = new Img(256, 224);
+  const { x, y, w, h } = TUT_BOX;
+  roundRect(I, x, y, w, h, 6, 1);                 // contorno escuro
+  roundRect(I, x + 1, y + 1, w - 2, h - 2, 5, 3); // moldura caramelo
+  for (let i = x + 4; i < x + w - 4; i++) I.set(i, y + 1, 2);
+  roundRect(I, x + 3, y + 3, w - 6, h - 6, 3, 4); // filete claro (borda suave)
+  roundRect(I, x + 4, y + 4, w - 8, h - 8, 2, (px, py) => degrade([5, 6, 7, 8, 9, 10], (py - y - 4) / (h - 9), px, py));
+  return I;
+}
+
+// pilula dos botoes de acao (rodape das caixas): sprites 16x16 na paleta 1
+// (creme F8F0C8 -> E8D098, brilho F8F8F8, borda C8A868, sombra 805030)
+function pilula() {
+  const I = new Img(48, 16);
+  roundRect(I, 0, 1, 48, 15, 7, 8);                // sombra (1 px abaixo)
+  roundRect(I, 0, 0, 48, 15, 7, 4);                // borda suave
+  roundRect(I, 1, 1, 46, 13, 6, (px, py) => degrade([13, 2, 2, 3], (py - 1) / 12, px, py));
+  return { esq: I.sub(0, 0, 16, 16), meio: I.sub(16, 0, 16, 16), dir: I.sub(32, 0, 16, 16) };
 }
 
 // =================================================================== CENARIO: MAPA
@@ -580,8 +635,8 @@ function botao(tipo) {
     const [c, c2] = cores[tipo];
     I.ell(1, 1, 14, 14, c2); I.ell(1, 1, 13, 13, c);
     I.set(4, 3, w); I.set(5, 3, w); I.set(3, 4, w);
-    const gl = GLYPHS[tipo];
-    for (let yy = 0; yy < 7; yy++) for (let xx = 0; xx < 5; xx++) if (gl[yy][xx] === '#') I.set(xx + 5, yy + 4, w);
+    const gl = GLYPHS[tipo], cl = tipo === 'B' ? k : w; // letra preta no amarelo (contraste)
+    for (let yy = 0; yy < 7; yy++) for (let xx = 0; xx < 5; xx++) if (gl[yy][xx] === '#') I.set(xx + 5, yy + 4, cl);
   } else if (tipo === 'OK') {
     I.ell(1, 1, 14, 14, N); I.ell(1, 1, 13, 13, n);
     [[4, 8], [5, 9], [6, 10], [7, 9], [8, 8], [9, 7], [10, 6], [11, 5]].forEach(([x, yy]) => { I.set(x, yy, w); I.set(x, yy + 1, w); });
@@ -596,6 +651,33 @@ function botao(tipo) {
     if (tipo === 'R') { I.set(13, 7, w); I.set(13, 8, w); I.vline(12, 6, 4, w); }
   }
   I.outline(k);
+  return I;
+}
+// botao 8x8 para aparecer no meio do texto (mesmas cores do botao do minijogo)
+const LETRA3 = {
+  A: ['.#.', '#.#', '###', '#.#', '#.#'], B: ['##.', '#.#', '##.', '#.#', '##.'],
+  X: ['#.#', '#.#', '.#.', '#.#', '#.#'], Y: ['#.#', '#.#', '.#.', '.#.', '.#.'],
+};
+function botao8(tipo) {
+  const k = 1, w = 2, g = 3, G = 4, y = 5, o = 6, r = 9, R = 10, n = 11, N = 12, u = 15;
+  const I = new Img(8, 8);
+  const cores = { A: [r, R], B: [y, o], X: [u, k], Y: [n, N] };
+  if (cores[tipo]) {
+    const [c, c2] = cores[tipo];
+    // disco com contorno preto e sombra embaixo/direita no tom escuro
+    I.rect(2, 0, 4, 8, k); I.rect(1, 1, 6, 6, k); I.rect(0, 2, 8, 4, k);
+    I.rect(2, 1, 4, 6, c2); I.rect(1, 2, 6, 4, c2);
+    I.rect(2, 1, 4, 5, c); I.rect(1, 2, 5, 3, c);
+    const l = LETRA3[tipo], cl = tipo === 'B' ? k : w; // letra preta no amarelo (contraste)
+    const lx = tipo === 'B' ? 3 : 2; // o B (aberto a direita) fica centrado 1 px adiante
+    for (let yy = 0; yy < 5; yy++) for (let xx = 0; xx < 3; xx++) if (l[yy][xx] === '#') I.set(xx + lx, yy + 1, cl);
+  } else {
+    // cruz direcional com o lado pedido aceso
+    I.rect(2, 0, 4, 8, k); I.rect(0, 2, 8, 4, k);
+    I.rect(3, 1, 2, 6, G); I.rect(1, 3, 6, 2, G); I.rect(3, 3, 2, 2, g);
+    const arm = { CIMA: [3, 1, 2, 2], BAIXO: [3, 5, 2, 2], ESQ: [1, 3, 2, 2], DIR: [5, 3, 2, 2] }[tipo];
+    I.rect(arm[0], arm[1], arm[2], arm[3], y);
+  }
   return I;
 }
 // entregas: telefone de parede, monitor de pedidos e moto do motoboy (paleta 0)
@@ -646,12 +728,14 @@ function bar(level, fill) {
 }
 
 // ----- alocador da folha de sprites (16 tiles de largura x 32 de altura)
-function buildSprites() {
+// emojis: { nome: Img } de gerador/emoji_sprites.py (usados no lugar do desenho)
+function buildSprites(emojis = {}) {
+  const emo = (nome, desenho) => emojis[nome] || desenho();
   const sheet = new Img(128, 256); // cada pixel guarda (pal<<4)|cor para preview
   const occ = new Array(16 * 32).fill(false);
   const ids = {};
-  function alloc(sz) { // sz em tiles (1,2,4)
-    for (let ty = 0; ty < 32; ty++) for (let tx = 0; tx <= 16 - sz; tx++) {
+  function alloc(sz, minTy = 0) { // sz em tiles (1,2,4)
+    for (let ty = minTy; ty < 32; ty++) for (let tx = 0; tx <= 16 - sz; tx++) {
       if (ty < 16 && ty + sz > 16) continue; if (ty + sz > 32) continue;
       let ok = true;
       for (let j = 0; j < sz && ok; j++) for (let i = 0; i < sz; i++) if (occ[(ty + j) * 16 + tx + i]) { ok = false; break; }
@@ -659,8 +743,8 @@ function buildSprites() {
     }
     throw new Error('folha de sprites cheia');
   }
-  function put(name, img, pal) {
-    const sz = img.w / 8, { tx, ty } = alloc(sz);
+  function put(name, img, pal, minTy = 0) {
+    const sz = img.w / 8, { tx, ty } = alloc(sz, minTy);
     for (let j = 0; j < img.h; j++) for (let i = 0; i < img.w; i++) { const c = img.get(i, j); if (c) sheet.set(tx * 8 + i, ty * 8 + j, (pal << 4) | c); }
     ids[name] = ty * 16 + tx; return ids[name];
   }
@@ -677,17 +761,20 @@ function buildSprites() {
   // retratos: faixa separada (128x32) carregada por cima dos clientes so nas cartas
   const portImg = new Img(128, 32);
   PORT_SPECS.forEach((sp, i) => { portImg.paste(person(sp), i * 32, 0); ids[`PORT_${i}`] = i * 4; });
-  ['carne', 'queijo', 'frango', 'calabresa', 'catupiry', 'bacon'].forEach((n, i) => put(`ICON_${i}`, icon(n), 0));
+  ['carne', 'queijo', 'frango', 'calabresa', 'catupiry', 'bacon'].forEach((n, i) => put(`ICON_${i}`, emo(n, () => icon(n)), 0));
   put('MASCOTE_0', mascote(false), 1); put('MASCOTE_1', mascote(true), 1);
-  for (const n of ['cadeado', 'balao', 'cursor', 'raiva', 'coracao', 'moeda', 'xis', 'loja', 'franquia', 'estrela', 'refri']) put(n.toUpperCase(), icon(n), 0);
+  for (const n of ['cadeado', 'balao', 'cursor', 'raiva', 'coracao', 'moeda', 'xis', 'loja', 'franquia', 'estrela', 'refri']) put(n.toUpperCase(), emo(n, () => icon(n)), 0);
   put('REFRI_P', refriP(), 0);
   { const b = new Img(8, 8); b.ell(1, 1, 6, 6, 13); b.ell(2, 2, 5, 5, 0); b.set(2, 2, 13); put('BOLHA', b, 1); }
   for (const b of ['U', 'D', 'L', 'R', 'A', 'B', 'X', 'Y', 'OK']) put('BTN_' + b, botao(b), 0);
-  put('TELEFONE', entrega('tel'), 0); put('MONITOR', entrega('pc'), 0); put('MOTO', entrega('moto'), 0);
+  put('TELEFONE', emo('telefone', () => entrega('tel')), 0); put('MONITOR', emo('monitor', () => entrega('pc')), 0); put('MOTO', emo('moto', () => entrega('moto')), 0);
   // digitos amarelos 8x8 para o "+R$" flutuante
   '0123456789+$'.split('').forEach((ch, i) => put('DIG_' + (ch === '+' ? 'MAIS' : ch === '$' ? 'RS' : ch), digito(ch), 0));
   for (let s = 0; s < 3; s++) put(`PASTEL_${s}`, pastel(s), 1);
-  for (const n of ['fumaca', 'brilho', 'fogo']) put(n.toUpperCase(), pastelFx(n), 1);
+  for (const n of ['fumaca', 'brilho', 'fogo']) put(n.toUpperCase(), emo(n, () => pastelFx(n)), 1);
+  // botoes do texto: a partir da linha 6 (tiles 96+), que as cartas e a loja nao sobrescrevem
+  for (const b of BOTOES) put('BTN8_' + b, botao8(b), 0, 6);
+  { const p = pilula(); put('PILULA_E', p.esq, 1, 6); put('PILULA_M', p.meio, 1, 6); put('PILULA_D', p.dir, 1, 6); }
   // barras: precisa de 27 tiles 8x8 consecutivos -> aloca 2 linhas inteiras
   let barBase = -1;
   for (let ty = 31; ty >= 16 && barBase < 0; ty--) {
@@ -711,6 +798,6 @@ function buildSprites() {
 }
 
 module.exports = {
-  shopScene, shopPal, titleScene, menuScene, mapScene, buildSprites, sceneToBG, palBytes,
-  PAL_SHOP, PAL_TITLE, PAL_MENU, PAL_MAP,
+  shopScene, shopPal, titleScene, menuScene, menuChecker, tutBalloon, PAL_TUT, TUT_BOX, mapScene, buildSprites, sceneToBG, palBytes,
+  PAL_SHOP, PAL_TITLE, PAL_MENU, PAL_MAP, SPAL,
 };

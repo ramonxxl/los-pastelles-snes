@@ -11,7 +11,7 @@ CACHE = os.path.join(ROOT, 'arte_fonte', 'emoji')
 GEN = os.path.join(ROOT, 'gen')
 URL = 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/{}.png'
 
-# ordem = itens da loja (S_0..S_18)
+# ordem = itens da loja (S_0..S_19) e depois os dos menus (20..23); cabem 24
 ICONES = [
     '1f4e6',  # ingredientes: caixa
     '1f373',  # fritadeira: frigideira
@@ -31,7 +31,13 @@ ICONES = [
     '1f4b0',  # preco: saco de dinheiro
     '1f5fa',  # mapa
     '1f3c6',  # trofeus
+    '1f3e0',  # voltar ao menu: casa
     '2600',   # abrir a loja: sol (novo dia)
+    # menus (titulo e opcoes): ICO_* em src/ui.s
+    '2728',   # 20 novo jogo: brilhos
+    '1f4be',  # 21 continuar: disquete
+    '2699',   # 22 opcoes: engrenagem
+    '1f525',  # 23 dificuldade: fogo
 ]
 CONTORNO = (40, 20, 12)
 

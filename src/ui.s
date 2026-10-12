@@ -5,6 +5,10 @@
 ;  - caixa que abre com efeito elastico (rolagem vertical por linha)
 ;  - faixas do HUD do expediente com brilho de vidro
 ;  - texto que aparece letra por letra (maquina de escrever)
+;  - botoes do controle coloridos no meio do texto (sprites sobre glifos vazios)
+;  - rodape das caixas numa pilula com degrade (sprites) logo abaixo do texto
+;  - balao do tutorial (BG2) com o resto da tela, HUD incluso, escurecido
+;  - xadrez do fundo (BG2) rolando para a direita sem parar
 ; Canais: 7 = COLDATA, 6 = BG1VOFS, 5 = BG3VOFS (o canal 0 fica com o DMA comum)
 
 HDMAEN   = $420C
@@ -18,6 +22,16 @@ COLDATA  = $2132
 UI_OFF   = 0
 UI_PANEL = 1
 UI_HUD   = 2
+UI_TITULO = 3              ; titulo: xadrez animado (BG2) atras da logo, sem degrade
+
+; icones dos menus na folha de gerador/icones.py
+ICO_MUSICA = 12
+ICO_FALAS  = 5
+ICO_VOLTAR = 18
+ICO_NOVO   = 20
+ICO_CONT   = 21
+ICO_OPC    = 22
+ICO_DIF    = 23
 
 ; ---------------------------------------------------------------- cenas
 ; chamada pelas cenas de painel: degrade, faixa desligada e animacao de abertura
@@ -49,6 +63,15 @@ UiOff:
     stz hl_y
     stz hl_old
     stz tw_on
+    rts
+
+; titulo: so o xadrez animado
+UiTituloOn:
+    .a8
+    .i16
+    jsr UiOff
+    lda #UI_TITULO
+    sta ui_mode
     rts
 
 ; expediente: brilho nas faixas do HUD
@@ -92,6 +115,28 @@ UiMarkX:
 UiNmi:
     .a8
     .i16
+    lda ui_mode
+    cmp #UI_PANEL
+    beq :+
+    cmp #UI_TITULO
+    bne @nochk
+:
+    ; xadrez do BG2: anda 1 pixel para a direita a cada 2 quadros (HOFS = -quadro/2)
+    A16
+    lda frame
+    lsr a
+    eor #$FFFF
+    inc a
+    A8
+    sta BG2HOFS
+    xba
+    and #$03
+    sta BG2HOFS
+    lda #$FF
+    sta BG2VOFS
+    lda #$03
+    sta BG2VOFS
+@nochk:
     lda ui_open
     beq @normal
     lda bright
@@ -122,7 +167,7 @@ UiNmi:
     sta $4361
     lda #$60
     sta HDMAEN
-    lda #$05               ; BG1 + BG3 (sprites aparecem quando a caixa abre)
+    lda #$07               ; BG1 + BG2 + BG3 (sprites aparecem quando a caixa abre)
     sta TM
     lda #$30
     sta CGWSEL
@@ -149,13 +194,19 @@ UiNmi:
     beq @panel
     cmp #UI_HUD
     beq @hud
-    stz HDMAEN
+    cmp #UI_TITULO
+    bne :+
+    lda #$17               ; titulo: BG1 + BG2 (xadrez) + BG3 + sprites
+    sta TM
+:   stz HDMAEN
     lda #$30
     sta CGWSEL
     stz CGADSUB
     rts
 @panel:
-    ; subtrai cor no BG1 e no fundo, so dentro do painel (janela 1)
+    lda #$17               ; BG1 + BG2 (xadrez) + BG3 + sprites
+    sta TM
+    ; subtrai cor no BG1, BG2 e no fundo, so dentro do painel (janela 1)
     lda #$20
     sta WOBJSEL
     lda #14
@@ -164,7 +215,7 @@ UiNmi:
     sta WH1
     lda #$10
     sta CGWSEL
-    lda #$A1
+    lda #$A3
     sta CGADSUB
     lda #$20               ; vermelho = 0 (o HDMA escreve verde e azul)
     sta COLDATA
@@ -196,6 +247,9 @@ UiUpdate:
     .a8
     .i16
     jsr TypeStep
+    jsr TutSprites
+    jsr BtnSprites
+    jsr PillSprites
     lda ui_mode
     cmp #UI_PANEL
     beq :+
@@ -365,6 +419,12 @@ TypeStep:
 :   ldx tw_pos
     sta bg3_buf,x
     pha
+    cmp #FONT_BTN0
+    bcc @nobtn
+    cmp #(FONT_BTN0+N_BTN)
+    bcs @nobtn
+    jsr BtnReg
+@nobtn:
     lda tw_attr
     sta bg3_buf+1,x
     inx
@@ -393,3 +453,421 @@ TypeFinish:
     jsr TypeStep
     bra @l
 :   rts
+
+; ---------------------------------------------------------------- botoes no texto
+; Os textos marcam botoes com {A} {B} {X} {Y} {CIMA}...: o glifo e vazio e um
+; sprite 8x8 colorido e desenhado por cima. PrintStr/TypeStep registram a posicao
+; (BtnReg); a cada quadro BtnSprites confere se o glifo ainda esta la (o texto pode
+; ter sido apagado ou sobrescrito) e escreve os ultimos slots da OAM.
+
+; A = glifo, X = deslocamento no bg3_buf (preserva X e Y)
+BtnReg:
+    .a8
+    .i16
+    sta btn_tcode
+    stx btn_tpos
+    phx
+    phy
+    ; mesma posicao ja registrada: reaproveita
+    ldy #0
+@same:
+    lda btn_tab+2,y
+    beq @nsame
+    A16
+    lda btn_tab,y
+    cmp btn_tpos
+    A8
+    beq @put
+@nsame:
+    iny
+    iny
+    iny
+    iny
+    cpy #(BTN_SLOTS*4)
+    bne @same
+    ; senao, o primeiro registro livre ou obsoleto
+    ldy #0
+@free:
+    lda btn_tab+2,y
+    beq @put
+    A16
+    lda btn_tab,y
+    tax
+    A8
+    lda bg3_buf,x
+    cmp btn_tab+2,y
+    bne @put
+    iny
+    iny
+    iny
+    iny
+    cpy #(BTN_SLOTS*4)
+    bne @free
+    bra @out               ; tudo ocupado: fica sem o sprite
+@put:
+    A16
+    lda btn_tpos
+    sta btn_tab,y
+    A8
+    lda btn_tcode
+    sta btn_tab+2,y
+@out:
+    ply
+    plx
+    rts
+
+; escreve os slots OAM_BTN.. (chamada todo quadro, depois da tela montar a OAM)
+BtnSprites:
+    .a8
+    .i16
+    ldx #0
+@lp:
+    lda btn_tab+2,x
+    beq @hide
+    lda ui_open            ; caixa abrindo (texto esticado): espera
+    bne @hide
+    phx
+    A16
+    lda btn_tab,x
+    tax
+    A8
+    lda bg3_buf,x
+    plx
+    cmp btn_tab+2,x
+    beq @show
+    stz btn_tab+2,x        ; o texto mudou: libera
+@hide:
+    lda #$F0
+    sta oam_buf+OAM_BTN+1,x
+    bra @nx
+@show:
+    ; posicao = (linha*32 + coluna)*2  ->  x = coluna*8, y = linha*8
+    A16
+    lda btn_tab,x
+    and #$003F
+    asl a
+    asl a
+    A8
+    sta oam_buf+OAM_BTN,x
+    A16
+    lda btn_tab,x
+    lsr a
+    lsr a
+    lsr a
+    and #$00F8
+    A8                     ; y = linha * 8 exato: 1 px acima, a sombra das letras
+    sta oam_buf+OAM_BTN+1,x ; da linha de cima (BG3, na frente) cobre o botao
+    lda btn_tab+2,x
+    sec
+    sbc #FONT_BTN0
+    A16
+    and #$00FF
+    asl a
+    tay
+    lda BtnSprTile,y
+    A8
+    sta oam_buf+OAM_BTN+2,x
+    xba
+    and #$01
+    ora #$30               ; prioridade 3, paleta 0
+    sta oam_buf+OAM_BTN+3,x
+@nx:
+    inx
+    inx
+    inx
+    inx
+    cpx #(BTN_SLOTS*4)
+    bne @lp
+    ; tabela alta: 8x8 e x < 256 para os slots 116..127
+    stz oam_buf+512+(OAM_BTN/16)
+    stz oam_buf+512+(OAM_BTN/16)+1
+    stz oam_buf+512+(OAM_BTN/16)+2
+    rts
+
+; ---------------------------------------------------------------- rodape em pilula
+; X = texto (banco 0), A = linha. Centraliza o texto na linha e desenha atras
+; dele uma pilula creme com degrade (sprites 16x16 nos ultimos slots da OAM).
+Footer:
+    .a8
+    .i16
+    sta ft_y
+    stx tmp3
+    ldy #0                  ; tamanho do texto
+:   lda a:0,x
+    cmp #$FF
+    beq :+
+    inx
+    iny
+    bra :-
+:   tya
+    sta ft_x1
+    lda #32                 ; coluna = (32 - tamanho) / 2
+    sec
+    sbc ft_x1
+    lsr a
+    sta ft_x0
+    lda ft_y                ; txt_pos = linha * 32 + coluna
+    A16
+    and #$00FF
+    asl a
+    asl a
+    asl a
+    asl a
+    asl a
+    sta txt_pos
+    lda ft_x0
+    and #$00FF
+    clc
+    adc txt_pos
+    sta txt_pos
+    asl a
+    sta ft_pos
+    A8
+    lda #((7<<2)|$20)
+    sta txt_attr
+    ldx tmp3
+    jsr PrintStr
+    ; x da pilula: uma coluna antes do texto ate uma depois
+    lda ft_x0
+    dec a
+    asl a
+    asl a
+    asl a
+    sta ft_x0
+    lda ft_x1               ; peca da direita em x0 + (tamanho + 2) * 8 - 16
+    asl a
+    asl a
+    asl a
+    clc
+    adc ft_x0
+    sta ft_x1
+    lda ft_y                ; y = linha * 8 - 4 (pilula de 16 px centrada no texto)
+    asl a
+    asl a
+    asl a
+    sec
+    sbc #4
+    sta ft_y
+; liga a pilula com ft_pos (deslocamento no bg3_buf de um caractere que ja esta
+; escrito), ft_x0, ft_x1 (x da peca da direita) e ft_y prontos. Ela some sozinha
+; quando aquele caractere muda (o texto foi apagado ou reescrito)
+PilulaLiga:
+    .a8
+    .i16
+    ldx ft_pos
+    lda bg3_buf,x
+    sta ft_code
+    lda #1
+    sta ft_on
+    rts
+
+; icone emoji A (0..23, gerador/icones.py) em spr_x/spr_y; carry = 1: balanca
+; (item escolhido). Precisa da folha de icones carregada (IconGfx/IconPal)
+IconeSprite:
+    .a8
+    .i16
+    php
+    A16
+    and #$00FF
+    tax
+    A8
+    lda f:IconPalTab,x
+    asl a
+    ora #$30
+    sta spr_attr
+    txa                     ; tile = (i % 8) * 2 + (i / 8) * 32
+    and #$07
+    asl a
+    sta spr_tile
+    txa
+    and #$F8
+    asl a
+    asl a
+    clc
+    adc spr_tile
+    sta spr_tile
+    stz spr_tile+1
+    plp
+    bcc :+
+    A16
+    lda frame
+    lsr a
+    and #$001F
+    tax
+    A8
+    lda f:UiBob,x
+    clc
+    adc spr_y
+    sta spr_y
+:   lda #1
+    sta spr_size
+    jsr AddSprite
+    stz spr_size
+    rts
+
+PillSprites:
+    .a8
+    .i16
+    ldx #0
+    lda ft_on
+    beq @hide
+    lda ui_open             ; caixa abrindo: espera
+    bne @hide
+    ldy ft_pos
+    lda bg3_buf,y
+    cmp ft_code
+    beq :+
+    stz ft_on               ; o texto do rodape sumiu
+    bra @hide
+:   ; esquerda, meio (repetido; pode sobrepor) e direita
+    lda ft_x0
+    sta tmp
+    A16
+    lda #SPR_PILULA_E
+    sta tmp2
+    A8
+@lp:
+    lda tmp
+    cmp ft_x1
+    bcc :+
+    lda ft_x1
+    A16
+    ldy #SPR_PILULA_D
+    sty tmp2
+    A8
+:   sta oam_buf+OAM_PILL,x
+    lda ft_y
+    sta oam_buf+OAM_PILL+1,x
+    lda tmp2
+    sta oam_buf+OAM_PILL+2,x
+    lda tmp2+1
+    and #$01
+    ora #$32                ; prioridade 3, paleta 1
+    sta oam_buf+OAM_PILL+3,x
+    inx
+    inx
+    inx
+    inx
+    lda tmp
+    cmp ft_x1
+    bcs @hide               ; a direita ja foi
+    clc
+    adc #16
+    sta tmp
+    A16
+    lda #SPR_PILULA_M
+    sta tmp2
+    A8
+    cpx #(PILL_SLOTS*4)
+    bne @lp
+@hide:
+    cpx #(PILL_SLOTS*4)
+    beq @hi
+    lda #$F0
+    sta oam_buf+OAM_PILL+1,x
+    inx
+    inx
+    inx
+    inx
+    bra @hide
+@hi:
+    ; tabela alta: todos 16x16, x < 256
+    lda #$AA
+    sta oam_buf+512+(OAM_PILL/16)
+    sta oam_buf+512+(OAM_PILL/16)+1
+    sta oam_buf+512+(OAM_PILL/16)+2
+    sta oam_buf+512+(OAM_PILL/16)+3
+    rts
+
+; ---------------------------------------------------------------- balao do tutorial
+; NMI com dim_on = 2: BG2 (balao) ligado; a janela 1 esconde o BG1 dentro do balao
+; e o HDMA limita a janela as linhas do balao e escurece o BG3 (HUD) fora dele
+TMW      = $212E
+W12SEL   = $2123
+TutNmi:
+    .a8
+    .i16
+    lda #$17                ; BG1 + BG2 + BG3 + sprites
+    sta TM
+    lda #$02                ; BG1 na janela 1
+    sta W12SEL
+    lda #$01
+    sta TMW
+    stz BG2HOFS
+    stz BG2HOFS
+    lda #$FF
+    sta BG2VOFS
+    lda #$03
+    sta BG2VOFS
+    ; canal 6: WH0/WH1 por linha
+    lda #$01
+    sta $4360
+    lda #<WH0
+    sta $4361
+    ldx #.loword(TutWinTab)
+    stx $4362
+    lda #^TutWinTab
+    sta $4364
+    ; canal 7: CGADSUB por linha (BG3 escurecido fora do balao)
+    stz $4370
+    lda #<CGADSUB
+    sta $4371
+    ldx #.loword(TutMathTab)
+    stx $4372
+    lda #^TutMathTab
+    sta $4374
+    lda #$C0
+    sta HDMAEN
+    rts
+
+TutWinTab:
+    .byte TUT_Y0, 255, 0
+    .byte TUT_H, TUT_X0, TUT_X1
+    .byte 1, 255, 0
+    .byte 0
+TutMathTab:
+    .byte TUT_Y0, $B5      ; subtrai em BG1, BG3, sprites e fundo
+    .byte TUT_H, $B1       ; no balao: o texto (BG3) fica aceso
+    .byte 1, $B5
+    .byte 0
+
+; com o balao aberto, os sprites do jogo que encostam na area do balao somem: os
+; de dentro ja ficariam cobertos, e qualquer um nessas linhas conta no limite de
+; sprites por linha do SNES (32 sprites / 34 tiles), cortando botoes e pilula.
+; Os outros descem para a prioridade 2 (atras do balao, BG2 com prioridade alta).
+; Botoes e pilula seguem na frente.
+TutSprites:
+    .a8
+    .i16
+    lda dim_on
+    cmp #2
+    beq :+
+    rts
+:   ldx #0
+@l: cpx oam_idx            ; so os sprites que a tela usou
+    bcs @r
+    ; encosta no balao? (supondo 16x16: linhas y..y+15, colunas x..x+15)
+    lda oam_buf+1,x
+    cmp #(TUT_Y0-15)
+    bcc @atras
+    cmp #(TUT_Y0+TUT_H)
+    bcs @atras
+    lda oam_buf,x
+    cmp #(TUT_X0-15)
+    bcc @atras
+    cmp #(TUT_X1+1)
+    bcs @atras
+    lda #$F0
+    sta oam_buf+1,x
+    bra @nx
+@atras:
+    lda oam_buf+3,x
+    and #$EF
+    sta oam_buf+3,x
+@nx:
+    inx
+    inx
+    inx
+    inx
+    bra @l
+@r: rts

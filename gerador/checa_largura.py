@@ -82,3 +82,4 @@ def check(path):
 
 total = sum(check(p) for p in sys.argv[1:])
 print('problemas:', total)
+sys.exit(1 if total else 0)

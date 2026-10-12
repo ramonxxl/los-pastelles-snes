@@ -1,8 +1,9 @@
 BOTCFG = "botcfg_ui.lua"
-local dir = "C:/Users/ramon/Desktop/Jogo Snes/teste/"
+-- pasta teste/ (descoberta pelo caminho do script; senao, relativo a raiz do repositorio)
+local dir = (debug and debug.getinfo and (debug.getinfo(1, "S").source or ""):match("^@(.*[/\\])")) or "teste/"
 dofile(dir .. "bot.lua")
 local L = {}
-for line in io.lines("C:/Users/ramon/Desktop/Jogo Snes/gen/labels.txt") do
+for line in io.lines(dir .. "../gen/labels.txt") do
   local a, n = string.match(line, "al (%x+) %.([%w_]+)")
   if a then L[n] = tonumber(a, 16) end
 end

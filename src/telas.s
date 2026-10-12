@@ -19,9 +19,19 @@ LoadMenuScene:
     sta VMAIN
     VRAM_LOAD MenuTiles, VRAM_BG1TILES, (MenuTiles_end - MenuTiles)
     VRAM_LOAD MenuMap, VRAM_BG1MAP, 2048
+    jsr LoadXadrez
     jsr LoadBasePalettes
     PAL_LOAD MenuPal, 32, 32
+    PAL_LOAD ChkPal, 48, 32
     jmp UiPanelOn
+
+; xadrez animado do fundo (BG2: tiles no fim da area do BG1, mapa, paleta 3)
+LoadXadrez:
+    .a8
+    .i16
+    VRAM_LOAD MenuChkTiles, MENU_CHK_VRAM, (MenuChkTiles_end - MenuChkTiles)
+    VRAM_LOAD MenuChkMap, VRAM_BG2MAP, 2048
+    rts
 
 LoadLogoScene:
     .a8
@@ -31,8 +41,13 @@ LoadLogoScene:
     jsr UiOff
     VRAM_LOAD LogoTiles, VRAM_BG1TILES, (LogoTiles_end - LogoTiles)
     VRAM_LOAD LogoMap, VRAM_BG1MAP, 2048
+    jsr LoadXadrez          ; o xadrez aparece em volta da logo e do cartao
     jsr LoadBasePalettes
     PAL_LOAD LogoPal, 32, 32
+    PAL_LOAD ChkPal, 48, 32
+    ; icones (emojis) do menu: sprites, paletas OBJ 3..6
+    VRAM_LOAD IconGfx, VRAM_OBJ, (IconGfx_end - IconGfx)
+    PAL_LOAD IconPal, 176, 128
     rts
 
 LoadTitleScene:
@@ -79,7 +94,9 @@ TitleInit:
     jsr LoadLogoScene
     jsr ClearBg3
     jsr OamClear
-    PRINT TXT_TIT_SUB, 6, 23, 5
+    jsr UiTituloOn          ; xadrez animado atras da logo
+    ldx #0
+    stx demo_ocioso
     jsr HasSave
     lda #0
     rol a
@@ -88,23 +105,89 @@ TitleInit:
     jsr TitleMenu
     jsr TitleSprites
     jsr ScreenOn
-    lda #SONG_TITULO
-    jsr PlaySong
-    jsr FadeIn
+    lda mu_est              ; a musica gravada ja esta tocando (voltou ao titulo)
+    bne :+
+    jsr StopMusic           ; o titulo usa a musica gravada (no lugar do chiptune)
+    lda #1                  ; musica e narracao entram assim que as vozes fixas
+    sta tema_pend           ; terminarem de carregar (TitleUpdate), sem travar a tela
+:   jsr FadeIn
     rts
 
+; menu do titulo no cartao (gerador/logo.py): subtitulo e itens com icone; o
+; escolhido fica vermelho, com a pilula atras e o icone balancando
+TIT_LIN  = 20               ; linha do 1o item (os outros a cada 2 linhas)
+TIT_COL  = 14               ; coluna do texto (o icone fica a esquerda)
 TitleMenu:
     .a8
     .i16
+    PRINT TXT_TIT_SUB, 6, 18, 5
+    PRINT TXT_TIT_AJ, 10, 26, 7
     ; itens: 0 novo jogo, 1 continuar (se houver save), 2 opcoes
-    PRINT TXT_TIT_NOVO, 12, 24, 4
+    lda #0
+    ldx #TXT_TIT_NOVO
+    jsr TitItem
     lda title_has_save
     beq :+
-    PRINT TXT_TIT_CONT, 12, 25, 4
-    PRINT TXT_TIT_OPC, 12, 26, 4
-    rts
-:   PRINT TXT_TIT_OPC, 12, 25, 4
-    rts
+    lda #1
+    ldx #TXT_TIT_CONT
+    jsr TitItem
+    lda #2
+    ldx #TXT_TIT_OPC
+    jmp TitItem
+:   lda #1
+    ldx #TXT_TIT_OPC
+    jmp TitItem
+
+; A = posicao no menu, X = texto
+TitItem:
+    .a8
+    .i16
+    sta loop_i
+    stx tmp3
+    asl a                   ; linha = TIT_LIN + 2 * posicao
+    clc
+    adc #TIT_LIN
+    sta loop_i+1
+    A16
+    and #$00FF
+    asl a
+    asl a
+    asl a
+    asl a
+    asl a
+    clc
+    adc #TIT_COL
+    sta txt_pos
+    A8
+    ldy #((4<<2)|$20)       ; marrom; o escolhido em vermelho
+    lda loop_i
+    cmp menu_sel
+    bne :+
+    ldy #((5<<2)|$20)
+:   sty txt_attr
+    ldx tmp3
+    jsr PrintStr
+    lda loop_i
+    cmp menu_sel
+    bne @r
+    A16                     ; pilula atras do item escolhido (do icone ao fim do texto)
+    lda txt_pos
+    asl a
+    sta ft_pos
+    A8
+    lda #(TIT_COL*8 - 32)
+    sta ft_x0
+    lda #(TIT_COL*8 + 72)
+    sta ft_x1
+    lda loop_i+1
+    asl a
+    asl a
+    asl a
+    sec
+    sbc #4
+    sta ft_y
+    jmp PilulaLiga
+@r: rts
 
 ; numero de itens do menu do titulo
 TitleCount:
@@ -118,7 +201,18 @@ TitleCount:
 TitleUpdate:
     .a8
     .i16
-    jsr TitleSprites
+    lda tema_pend           ; carga das vozes fixas acabou: musica + narracao
+    beq :+
+    ldx vz_carga
+    bne :+
+    stz tema_pend
+    jsr MusToca
+    lda #VOZ_TITULO         ; "Los Pastelles, o imperio do pastel" por cima da musica
+    jsr VozToca
+:   jsr DemoTitulo          ; 30 s parado: demonstracao
+    bcc :+
+    rts
+:   jsr TitleSprites
     jsr CodeCheck
     bcc :+
     SFX SFX_NIVEL
@@ -135,6 +229,7 @@ TitleUpdate:
     beq @nu
     dec menu_sel
     SFX SFX_CURSOR
+    jsr TitleMenu
 @nu:
     lda pad_new+1
     and #(KH_DOWN|KH_SEL)
@@ -145,6 +240,7 @@ TitleUpdate:
     beq @nd
     inc menu_sel
     SFX SFX_CURSOR
+    jsr TitleMenu
 @nd:
     lda pad_new+1
     and #KH_START
@@ -185,28 +281,49 @@ TitleUpdate:
 @rts:
     rts
 
+; icones dos itens do menu do titulo (o escolhido balanca)
+TitIcones:  .byte ICO_NOVO, ICO_CONT, ICO_OPC
+TitIcones2: .byte ICO_NOVO, ICO_OPC
 TitleSprites:
     .a8
     .i16
     jsr OamClear
-    A16
-    lda #84
+    stz loop_j
+@l: A16
+    lda #(TIT_COL*8 - 22)
     sta spr_x
-    lda #SPR_PASTEL_1
-    sta spr_tile
     A8
-    lda menu_sel
-    asl a
-    asl a
+    lda loop_j              ; y = (TIT_LIN + 2 * posicao) * 8 - 4
     asl a
     clc
-    adc #187
+    adc #TIT_LIN
+    asl a
+    asl a
+    asl a
+    sec
+    sbc #4
     sta spr_y
-    lda #$32
-    sta spr_attr
-    lda #1
-    sta spr_size
-    jmp AddSprite
+    A16
+    lda loop_j
+    and #$00FF
+    tax
+    A8
+    lda TitIcones,x
+    ldy title_has_save
+    bne :+
+    lda TitIcones2,x
+:   pha
+    lda loop_j
+    cmp menu_sel
+    beq :+
+    clc                     ; (carry = 1: escolhido, balanca)
+:   pla
+    jsr IconeSprite
+    inc loop_j
+    jsr TitleCount
+    cmp loop_j
+    bne @l
+    rts
 
 ; ================================================================ ABERTURA
 IntroInit:
@@ -214,6 +331,9 @@ IntroInit:
     .i16
     jsr FadeOut
     jsr ScreenOff
+    lda #$80
+    sta VMAIN
+    VRAM_LOAD SprTiles, VRAM_OBJ, 3072   ; (o titulo usa esse espaco para os icones)
     jsr LoadTitleScene
     lda #0
     jsr SignLight
@@ -363,6 +483,26 @@ CardInit:
 :   jsr FadeIn
     rts
 
+; carta com fala (desafio, vitoria, derrota, trofeu, final): toca a voz
+CartaFala:
+    .a8
+    .i16
+    A16
+    lda card_i
+    and #$00FF
+    tax
+    A8
+    lda card_q,x
+    A16
+    and #$00FF
+    tax
+    A8
+    lda f:CartaVoz,x
+    cmp #$FF
+    beq :+
+    jmp VozToca
+:   rts
+
 ; ponteiro da carta atual -> tmp (indice na CardTable)
 CardEntry:
     .a8
@@ -388,6 +528,7 @@ DrawCard:
     .a8
     .i16
     jsr ClearBg3
+    jsr CartaFala
     jsr CardEntry
     lda f:CardTable,x
     cmp #$FF
@@ -457,7 +598,9 @@ DrawCard:
     tyx
     lda #^CardTable
     jsr TypeStartB          ; texto aparece letra por letra
-    PRINT TXT_C_A, 16, 24, 7
+    ldx #TXT_C_A
+    lda #26
+    jsr Footer
     rts
 
 PortTiles: .word SPR_PORT_0, SPR_PORT_1, SPR_PORT_2, SPR_PORT_3, SPR_CUST_4_0, SPR_MASCOTE_0
@@ -1104,7 +1247,9 @@ DrawChart:
     PRINT TXT_G_MELHOR, 3, 24, 6
     PRINT TXT_G_RS, 10, 24, 6
     PRINTNUM16 tmp4, 13, 24, 6, 5
-    PRINT TXT_R_CONT, 16, 25, 7
+    ldx #TXT_R_CONT
+    lda #26
+    jsr Footer
     rts
 
 ; bloco cheio na coluna num (2 tiles) e linha num+1: paleta 6 (verde) / 5 (vermelho)
@@ -1315,7 +1460,9 @@ DrawResults:
     lda #((6<<2)|$20)
     sta txt_attr
     jsr PrintStr
-    PRINT TXT_R_CONT, 16, 25, 7
+    ldx #TXT_R_CONT
+    lda #26
+    jsr Footer
     rts
 
 ResultsUpdate:
@@ -1623,7 +1770,7 @@ ItemPrice:
     tax
     A8
     jmp (PriceFn,x)
-PriceFn: .word P0, P1, P2, P3, P4, P5, P6, P7, P9, P10, P11, P12, P13, P14, P15, P8, P8, P8, P8
+PriceFn: .word P0, P1, P2, P3, P4, P5, P6, P7, P9, P10, P11, P12, P13, P14, P15, P8, P8, P8, P8, P8
 
 .macro SETP val
     ldx #val
@@ -2050,8 +2197,9 @@ PriceLvTxt: .word TXT_ST_P0, TXT_ST_P1, TXT_ST_P2, TXT_ST_P3
 SH_PRECO = 15
 SH_MAPA  = 16
 SH_TROF  = 17
-SH_ABRIR = 18
-SH_N     = 19
+SH_MENU  = 18               ; voltar ao menu (titulo): salva e sai do jogo
+SH_ABRIR = 19
+SH_N     = 20
 SH_VIS   = 6               ; itens visiveis (a lista rola)
 
 ShopMsgs: .word TXT_SM_OK, TXT_SM_SEM, TXT_SM_BLOQ, TXT_SM_REP, TXT_SM_MAX, TXT_SM_ATIVO
@@ -2213,6 +2361,13 @@ ShopUpdate:
     bne :+
     SFX SFX_OK
     lda #ST_TROF
+    sta next_state
+    rts
+:   cmp #SH_MENU
+    bne :+
+    jsr SaveGame            ; salva e volta para a tela de titulo (CONTINUAR retoma)
+    SFX SFX_OK
+    lda #ST_TITLE
     sta next_state
     rts
 :   cmp #SH_ABRIR
@@ -2621,6 +2776,26 @@ SaveGame:
     iny
     cpy #29
     bne @e
+    rts
+
+; grava so o byte s_tflags no bloco extra do espaco atual (o bloco extra nao
+; tem soma de verificacao; NewGame ja gravou o espaco inteiro)
+SaveTFlags:
+    .a8
+    .i16
+    ldx tmp2
+    phx
+    ldx tmp4
+    phx
+    lda save_slot
+    jsr SlotAddr
+    ldx tmp4
+    lda s_tflags
+    sta f:SRAM+2+(s_tflags-s_price),x
+    plx
+    stx tmp4
+    plx
+    stx tmp2
     rts
 
 ; A = espaco -> carry = 1 se ha jogo valido (tmp2 = base)

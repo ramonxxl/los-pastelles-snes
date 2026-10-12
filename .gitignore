@@ -23,3 +23,6 @@ trailer/audio_mix.wav
 
 # Foto de referência de terceiros
 cartucho/br-*.jpg
+
+# Áudios originais (MP3); o BRR convertido fica em arte_fonte/brr/
+sounds/

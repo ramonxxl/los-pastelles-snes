@@ -11,6 +11,7 @@ LoadOptions:
     lda #1
     sta opt_diff
     sta opt_music
+    sta opt_falas
     lda f:OPT_SRAM
     cmp #'O'
     bne @rts
@@ -24,6 +25,13 @@ LoadOptions:
     lda f:OPT_SRAM+3
     and #$01
     sta opt_music
+    lda f:OPT_SRAM+4        ; falas: $A0/$A1 (antes de existir a opcao: ligadas)
+    and #$FE
+    cmp #$A0
+    bne @rts
+    lda f:OPT_SRAM+4
+    and #$01
+    sta opt_falas
 @rts:
     rts
 
@@ -38,34 +46,150 @@ SaveOptions:
     sta f:OPT_SRAM+2
     lda opt_music
     sta f:OPT_SRAM+3
+    lda opt_falas
+    ora #$A0
+    sta f:OPT_SRAM+4
     rts
 
 ; ================================================================ TELA DE OPCOES
+; caixa com um item por linha: icone (emoji) + nome + valor entre os botoes da
+; cruz; o escolhido fica vermelho, com a faixa pulsante e o icone balancando;
+; embaixo, a explicacao do item; rodape em pilula
+OPT_N    = 4                ; dificuldade, musica, falas, voltar
+OPT_LIN0 = 7                ; linha do 1o item (a cada 3 linhas)
+
 OptInit:
     .a8
     .i16
     jsr FadeOut
     jsr ScreenOff
     jsr LoadMenuScene
+    VRAM_LOAD IconGfx, VRAM_OBJ, (IconGfx_end - IconGfx)
+    PAL_LOAD IconPal, 176, 128
     jsr OamClear
     stz menu_sel
     jsr OptDraw
+    jsr OptSprites
     jsr ScreenOn
     jsr FadeIn
     rts
 
-OptDiffTxt:  .word TXT_OP_D0, TXT_OP_D1, TXT_OP_D2
-OptDiffDesc: .word TXT_OPD_0, TXT_OPD_1, TXT_OPD_2
+OptNome:    .word TXT_OP_DIF, TXT_OP_MUS, TXT_OP_FAL, TXT_OP_VOLTAR
+OptIcone:   .byte ICO_DIF, ICO_MUSICA, ICO_FALAS, ICO_VOLTAR
+OptDiffTxt: .word TXT_OP_D0, TXT_OP_D1, TXT_OP_D2
+OptDiffDesc:.word TXT_OPD_0, TXT_OPD_1, TXT_OPD_2
+
+; linha do item A -> A
+OptLinha:
+    .a8
+    .i16
+    sta tmp
+    asl a
+    clc
+    adc tmp
+    clc
+    adc #OPT_LIN0
+    rts
+
+; txt_pos = linha A, coluna X
+OptPos:
+    .a8
+    .i16
+    stx tmp
+    A16
+    and #$00FF
+    asl a
+    asl a
+    asl a
+    asl a
+    asl a
+    clc
+    adc tmp
+    sta txt_pos
+    A8
+    rts
 
 OptDraw:
     .a8
     .i16
     jsr ClearBg3
-    PRINT TXT_OP_TIT, 3, 3, 5
-    PRINT TXT_OP_DIF, 5, 7, 4
-    PRINT TXT_OP_MUS, 5, 9, 4
-    PRINT TXT_OP_VOLTAR, 5, 11, 4
-    ; valores
+    PRINT TXT_OP_TIT, 6, 3, 5
+    stz loop_i
+@it:
+    lda loop_i
+    jsr OptLinha
+    sta loop_i+1
+    ldx #5
+    jsr OptPos
+    ldy #((4<<2)|$20)       ; nome: marrom; o escolhido em vermelho
+    lda loop_i
+    cmp menu_sel
+    bne :+
+    ldy #((5<<2)|$20)
+:   sty txt_attr
+    A16
+    lda loop_i
+    and #$00FF
+    asl a
+    tax
+    lda OptNome,x
+    tax
+    A8
+    jsr PrintStr
+    lda loop_i              ; valor (menos no "voltar"): {ESQ} valor {DIR}
+    cmp #3
+    bcs @prox
+    lda #((7<<2)|$20)
+    sta txt_attr
+    lda loop_i+1
+    ldx #17
+    jsr OptPos
+    ldx #TXT_OP_ESQ
+    jsr PrintStr
+    lda loop_i+1
+    ldx #28
+    jsr OptPos
+    ldx #TXT_OP_DIR
+    jsr PrintStr
+    lda loop_i+1
+    ldx #18
+    jsr OptPos
+    jsr OptValor
+    jsr PrintStr
+@prox:
+    inc loop_i
+    lda loop_i
+    cmp #OPT_N
+    bne @it
+    ; explicacao do item escolhido
+    lda #((6<<2)|$20)
+    sta txt_attr
+    lda #20
+    ldx #3
+    jsr OptPos
+    jsr OptAjuda
+    jsr PrintStr
+    ; faixa pulsante de 16 linhas no item escolhido
+    lda menu_sel
+    jsr OptLinha
+    asl a
+    asl a
+    asl a
+    sec
+    sbc #4
+    sta hl_y
+    lda #16
+    sta hl_h
+    ldx #TXT_OP_AJ
+    lda #26
+    jmp Footer
+
+; X = texto do valor do item loop_i
+OptValor:
+    .a8
+    .i16
+    lda loop_i
+    bne :+
     A16
     lda opt_diff
     and #$00FF
@@ -74,19 +198,26 @@ OptDraw:
     lda OptDiffTxt,x
     tax
     A8
-    ldy #(7*32+18)
-    sty txt_pos
-    lda #((7<<2)|$20)
-    sta txt_attr
-    jsr PrintStr
+    rts
+:   cmp #1
+    bne :+
     ldx #TXT_OP_M0
     lda opt_music
-    beq :+
+    beq @r
     ldx #TXT_OP_M1
-:   ldy #(9*32+18)
-    sty txt_pos
-    jsr PrintStr
-    ; descricao da dificuldade
+    rts
+:   ldx #TXT_OP_F0
+    lda opt_falas
+    beq @r
+    ldx #TXT_OP_F1
+@r: rts
+
+; X = explicacao do item escolhido
+OptAjuda:
+    .a8
+    .i16
+    lda menu_sel
+    bne :+
     A16
     lda opt_diff
     and #$00FF
@@ -95,40 +226,64 @@ OptDraw:
     lda OptDiffDesc,x
     tax
     A8
-    ldy #(15*32+3)
-    sty txt_pos
-    lda #((6<<2)|$20)
-    sta txt_attr
-    jsr PrintStr
-    PRINT TXT_OP_AJ, 3, 22, 7
-    ; seta
-    lda menu_sel
-    asl a
-    clc
-    adc #7
+    rts
+:   ldx #TXT_OPH_MUS
+    cmp #1
+    beq @r
+    ldx #TXT_OPH_FAL
+    cmp #2
+    beq @r
+    ldx #TXT_OPH_VOL
+@r: rts
+
+; icones dos itens (o escolhido balanca) e o do titulo
+OptSprites:
+    .a8
+    .i16
+    jsr OamClear
     A16
-    and #$00FF
-    asl a
-    asl a
-    asl a
-    asl a
-    asl a
+    lda #22
+    sta spr_x
+    A8
+    lda #(3*8 - 4)
+    sta spr_y
+    lda #ICO_OPC
     clc
-    adc #3
+    jsr IconeSprite
+    stz loop_j
+@l: A16
+    lda #18
+    sta spr_x
+    A8
+    lda loop_j
+    jsr OptLinha
     asl a
+    asl a
+    asl a
+    sec
+    sbc #4
+    sta spr_y
+    A16
+    lda loop_j
+    and #$00FF
     tax
     A8
-    lda #FONT_ARROW
-    sta bg3_buf,x
-    lda #((5<<2)|$20)
-    sta bg3_buf+1,x
-    jsr UiMarkX
+    lda loop_j
+    cmp menu_sel
+    beq :+
+    clc
+:   lda OptIcone,x
+    jsr IconeSprite
+    inc loop_j
+    lda loop_j
+    cmp #OPT_N
+    bne @l
     rts
 
 OptUpdate:
     .a8
     .i16
-    jsr OamClear
+    jsr OptSprites
     lda pad_new+1
     and #KH_UP
     beq @nu
@@ -142,7 +297,7 @@ OptUpdate:
     and #KH_DOWN
     beq @nd
     lda menu_sel
-    cmp #2
+    cmp #(OPT_N-1)
     bcs @nd
     inc menu_sel
     SFX SFX_CURSOR
@@ -160,18 +315,20 @@ OptUpdate:
     rts
 @act:
     lda menu_sel
-    cmp #2
+    cmp #3
     beq @back
 @chg:
     lda menu_sel
     bne @mus
-    ; dificuldade: direita/A sobe, esquerda desce
+    ; dificuldade: esquerda desce, direita/A sobe (circular)
     lda pad_new+1
     and #KH_LEFT
     beq @up
     lda opt_diff
-    beq @done
-    dec opt_diff
+    bne :+
+    lda #3
+:   dec a
+    sta opt_diff
     bra @done
 @up:
     lda opt_diff
@@ -183,18 +340,28 @@ OptUpdate:
     bra @done
 @mus:
     cmp #1
-    bne @rts
+    bne @fal
     lda opt_music
     eor #1
     sta opt_music
     beq @off
-    lda #$FF
-    sta cur_song
-    lda #SONG_TITULO
-    jsr PlaySong
+    jsr MusToca             ; a musica do titulo (gravada) volta
     bra @done
 @off:
     jsr StopMusic
+    bra @done
+@fal:
+    cmp #2
+    bne @rts
+    lda opt_falas
+    eor #1
+    sta opt_falas
+    beq :+
+    jsr SaveOptions
+    lda #VOZ_TOP            ; amostra: "top demais!"
+    jsr VozToca
+    jmp OptDraw
+:   jsr VozPara
 @done:
     SFX SFX_OK
     jsr SaveOptions
@@ -431,7 +598,12 @@ LoadShopScene:
     sta dma_src+2
     ldx #(32*2)
     ldy #32
-    jmp CopyPal
+    jsr CopyPal
+    ; balao do tutorial (BG2, so aparece com a caixa do tutorial aberta)
+    VRAM_LOAD TutTiles, TUT_VRAM, (TutTiles_end - TutTiles)
+    VRAM_LOAD TutMap, VRAM_BG2MAP, 2048
+    PAL_LOAD TutPal, 48, 32
+    rts
 
 .macro UNIT_SCENE n, r
     .faraddr .ident(.sprintf("Shop%d_%dTiles", n, r))
@@ -660,7 +832,9 @@ SlotsDraw:
     bra @aj
 :   PRINT TXT_SL_VAZ2, 3, 20, 5
 @aj:
-    PRINT TXT_SL_AJ, 3, 25, 4
+    ldx #TXT_SL_AJ
+    lda #26
+    jsr Footer
     rts
 
 SlotsUpdate:
@@ -772,6 +946,7 @@ SplashInit:
     PRINT TXT_SP_AUTOR, 7, 17, 5
     PRINT TXT_SP_SITE, 4, 20, 7
     PRINT TXT_SP_ANO, 7, 22, 6
+    PRINT TXT_SP_VER, SP_VER_COL, 24, 4   ; versao calculada na compilacao
     ldx #0
     stx splash_t
     jsr SplashSprite
@@ -1086,7 +1261,9 @@ TrofInit:
     iny
     cpy #16
     bne @l
-    PRINT TXT_TR_VOLTAR, 3, 24, 7
+    ldx #TXT_TR_VOLTAR
+    lda #26
+    jsr Footer
     lda s_tflags
     and #FESTA_BIT
     beq :+

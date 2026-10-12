@@ -1,23 +1,81 @@
 // Audio: driver SPC700 minimo (proxy de escrita no DSP), samples BRR e musicas
 'use strict';
 
-// ---------- driver SPC700 em $0200 (codigo de maquina montado a mao)
-// loop: espera porta0 mudar; DSP[porta1] = porta2; ecoa porta0
-const DRIVER = [
-  0xE4, 0xF4,       // 0200 mov a,$F4
-  0xC4, 0x00,       // 0202 mov $00,a
-  0xE4, 0xF4,       // 0204 loop: mov a,$F4
-  0x64, 0x00,       // 0206 cmp a,$00
-  0xF0, 0xFA,       // 0208 beq loop
-  0xC4, 0x00,       // 020A mov $00,a
-  0xE4, 0xF5,       // 020C mov a,$F5
-  0xC4, 0xF2,       // 020E mov $F2,a
-  0xE4, 0xF6,       // 0210 mov a,$F6
-  0xC4, 0xF3,       // 0212 mov $F3,a
-  0xE4, 0x00,       // 0214 mov a,$00
-  0xC4, 0xF4,       // 0216 mov $F4,a
-  0x2F, 0xEA,       // 0218 bra loop
+// ---------- mapa da memoria do SPC700 (64 KB)
+//  $0200 driver | $0300 diretorio de samples | $0400-$CFFF vozes fixas e chiado
+//  $D000-$DFFF eco (ESA/EDL=2) | $E000-$E7FA anel das falas (227 blocos BRR)
+//  $E800-$FFBA anel da musica (675 blocos BRR)
+const ARAM = { DRIVER: 0x0200, DIR: 0x0300, FIXAS: 0x0400, FIXAS_FIM: 0xD000,
+  FALA: 0xE000, FALA_LEN: 227 * 9, MUSICA: 0xE800, MUSICA_LEN: 675 * 9 };
+const SRCN = { MUSICA: 3, FRITURA: 4, FALA: 5, FIXA0: 6 };   // 0-2: ondas do chiptune
+
+// ---------- mini montador de SPC700 (so o que o driver usa)
+// itens: [bytes...] | {rot: 'nome'} | {br: opcode, alvo: 'nome', pre: [bytes antes do deslocamento]}
+function monta(org, itens) {
+  const rot = {};
+  for (let pass = 0; pass < 2; pass++) {
+    let pc = org; const out = [];
+    for (const it of itens) {
+      if (Array.isArray(it)) { out.push(...it); pc += it.length; continue; }
+      if (it.rot) { rot[it.rot] = pc; continue; }
+      const pre = it.pre || [];
+      const tam = 1 + pre.length + 1;
+      const d = pass ? rot[it.alvo] - (pc + tam) : 0;
+      if (pass && (d < -128 || d > 127)) throw new Error('desvio longe demais: ' + it.alvo);
+      out.push(it.br, ...pre, d & 255); pc += tam;
+    }
+    if (pass) return out;
+  }
+}
+const lo = (v) => v & 255, hi = (v) => v >> 8;
+// Driver. A porta 0 muda a cada comando:
+//  - bit 7 = 1: dados. 3 bytes (portas 1-3) vao para o ponteiro A ($02, bit 6 = 0:
+//    musica e carga das fixas) ou B ($06, bit 6 = 1: falas), que avanca 3. Sem eco
+//    de status, para ser rapido; a volta no anel e o CPU que comanda.
+//  - bit 7 = 0: porta1 = registrador do DSP e porta2 = valor; ou porta1 = $80/$81:
+//    ponteiro A/B = porta2/3. Esses comandos devolvem o ENDX na porta 1.
+// Sempre ecoa a porta 0 no fim. No inicio avisa "pronto" ($D5 na porta 1) depois de
+// ler a porta 0: sem isso o 1o comando do CPU pode ser tomado como valor inicial.
+const DADOS = (p) => [
+  [0x8D, 0x00],                                       // mov y,#0
+  [0xE4, 0xF5, 0xD7, p, 0xFC],                        // mov a,$F5 / mov [p]+y,a / inc y
+  [0xE4, 0xF6, 0xD7, p, 0xFC],
+  [0xE4, 0xF7, 0xD7, p],
+  [0x60, 0x98, 0x03, p, 0x98, 0x00, p + 1],           // clrc / adc p,#3 / adc p+1,#0
 ];
+const DRIVER = monta(ARAM.DRIVER, [
+  [0xE4, 0xF4, 0xC4, 0x00],                           // mov a,$F4 / mov $00,a
+  [0x8F, 0xD5, 0xF5],                                 // mov $F5,#$D5 (pronto)
+  { rot: 'laco' },
+  [0xE4, 0xF4, 0x64, 0x00],                           // mov a,$F4 / cmp a,$00
+  { br: 0xF0, alvo: 'laco' },                         // beq laco
+  [0xC4, 0x00],                                       // mov $00,a
+  { br: 0xF3, pre: [0x00], alvo: 'cmd' },             // bbc7 $00,cmd
+  { br: 0xC3, pre: [0x00], alvo: 'dadosB' },          // bbs6 $00,dadosB
+  ...DADOS(0x02),
+  { br: 0x2F, alvo: 'ack' },
+  { rot: 'dadosB' },
+  ...DADOS(0x06),
+  { br: 0x2F, alvo: 'ack' },
+  { rot: 'cmd' },
+  [0xE4, 0xF5],                                       // mov a,$F5
+  { br: 0x30, alvo: 'ptr' },                          // bmi ptr
+  [0xC4, 0xF2, 0xE4, 0xF6, 0xC4, 0xF3],               // mov $F2,a / mov a,$F6 / mov $F3,a
+  { br: 0x2F, alvo: 'status' },
+  { rot: 'ptr' },
+  [0x68, 0x81],                                       // cmp a,#$81
+  { br: 0xF0, alvo: 'ptrB' },
+  [0xE4, 0xF6, 0xC4, 0x02, 0xE4, 0xF7, 0xC4, 0x03],   // ponteiro A = porta2/3
+  { br: 0x2F, alvo: 'status' },
+  { rot: 'ptrB' },
+  [0xE4, 0xF6, 0xC4, 0x06, 0xE4, 0xF7, 0xC4, 0x07],   // ponteiro B = porta2/3
+  { rot: 'status' },
+  [0x8F, 0x7C, 0xF2, 0xE4, 0xF3, 0xC4, 0xF5],         // porta1 = ENDX
+  { rot: 'ack' },
+  [0xFA, 0x00, 0xF4],                                 // mov $F4,$00 (ecoa a porta 0)
+  { br: 0x2F, alvo: 'laco' },
+]);
+if (DRIVER.length > ARAM.DIR - ARAM.DRIVER) throw new Error('driver do SPC700 grande demais');
 
 // BRR com filtro 0: nibbles -8..7, shift 11 -> amplitude ~7k
 function brr(levels) { // levels: multiplo de 16, valores -8..7
@@ -40,15 +98,18 @@ function samples() {
   return [brr(sq), brr(tri), brr(pu)];
 }
 
-function spcBlob() {
-  const base = 0x0200, dirAddr = 0x0300;
+// extras: [{ inicio, loop }] para os SRCN 3.. (anel da musica, fritura, anel das falas, vozes fixas)
+function spcBlob(extras = []) {
+  const base = ARAM.DRIVER, dirAddr = ARAM.DIR;
   const smp = samples();
   const blob = new Array(dirAddr - base).fill(0);
   DRIVER.forEach((b, i) => { blob[i] = b; });
   const dir = [], data = [];
-  let addr = dirAddr + smp.length * 4;
+  let addr = dirAddr + (smp.length + extras.length) * 4;
   for (const s of smp) { dir.push(addr & 255, addr >> 8, addr & 255, addr >> 8); data.push(...s); addr += s.length; }
+  for (const e of extras) dir.push(lo(e.inicio), hi(e.inicio), lo(e.loop), hi(e.loop));
   blob.push(...dir, ...data);
+  if (base + blob.length > ARAM.FIXAS) throw new Error('driver + diretorio passam de $0400');
   // a sequencia do IPL termina com (tamanho+1)&255 != 0
   while (((blob.length + 1) & 255) === 0) blob.push(0);
   return Buffer.from(blob);
@@ -109,38 +170,7 @@ const SONGS = {
     [2, 0x22, `R:2 E4:2 R:2 G4:2 R:2 E4:2 R:2 G4:2 | R:2 F4:2 R:2 A4:2 R:2 E4:2 R:2 G4:2 | R:2 F4:2 R:2 A4:2 R:2 F4:2 R:2 A4:2 | R:2 D4:2 R:2 B3:2 R:2 D4:2 R:2 F4:2 |
                R:2 E4:2 R:2 G4:2 R:2 C4:2 R:2 E4:2 | R:2 F4:2 R:2 A4:2 R:2 F4:2 R:2 A4:2 | R:2 F4:2 R:2 A4:2 R:2 D4:2 R:2 B3:2 | R:2 D4:2 R:2 F4:2 R:2 E4:2 R:2 G4:2`],
   ] },
-  dia: { tempo: 6, loop: true, ch: [
-    [0, 0x34, `G5:2 R:1 G5:1 A5:2 B5:2 D6:4 B5:4 | C6:2 B5:2 A5:2 G5:2 A5:4 R:4 | E5:2 R:1 E5:1 F#5:2 G5:2 A5:4 G5:4 | F#5:2 E5:2 D5:2 E5:2 F#5:4 D5:4 |
-               G5:2 R:1 G5:1 A5:2 B5:2 D6:4 E6:4 | D6:2 C6:2 B5:2 A5:2 B5:4 G5:4 | C6:2 A5:2 B5:2 G5:2 A5:2 F#5:2 G5:2 E5:2 | D5:2 F#5:2 A5:2 F#5:2 G5:8`],
-    [1, 0x50, `G2:3 G2:1 D3:2 G2:2 G2:3 G2:1 D3:2 B2:2 | C3:3 C3:1 G3:2 C3:2 C3:3 C3:1 G2:2 A2:2 | A2:3 A2:1 E3:2 A2:2 A2:3 A2:1 E3:2 C3:2 | D3:3 D3:1 A3:2 D3:2 D3:3 D3:1 A2:2 F#2:2 |
-               G2:3 G2:1 D3:2 G2:2 G2:3 G2:1 D3:2 B2:2 | E2:3 E2:1 B2:2 E2:2 G2:3 G2:1 D3:2 G2:2 | C3:3 C3:1 G3:2 C3:2 D3:3 D3:1 A2:2 D3:2 | D3:3 D3:1 A2:2 D3:2 G2:4 R:4`],
-    [2, 0x20, `R:2 B4:1 R:1 D5:1 R:3 B4:1 R:1 D5:1 R:3 B4:2 | R:2 C5:1 R:1 E5:1 R:3 C5:1 R:1 E5:1 R:3 C5:2 | R:2 C5:1 R:1 E5:1 R:3 C5:1 R:1 E5:1 R:3 C5:2 | R:2 A4:1 R:1 D5:1 R:3 A4:1 R:1 F#4:1 R:3 A4:2 |
-               R:2 B4:1 R:1 D5:1 R:3 B4:1 R:1 D5:1 R:3 B4:2 | R:2 G4:1 R:1 B4:1 R:3 B4:1 R:1 D5:1 R:3 B4:2 | R:2 C5:1 R:1 E5:1 R:3 A4:1 R:1 D5:1 R:3 F#4:2 | R:2 A4:1 R:1 C5:1 R:3 B4:1 R:1 D5:1 R:3 G4:2`],
-  ] },
-  dia2: { tempo: 6, loop: true, ch: [
-    [0, 0x34, `F5:2 A5:2 C6:2 A5:2 Bb5:4 G5:4 | A5:2 F5:2 G5:2 E5:2 F5:8 | D5:2 F5:2 A5:2 F5:2 G5:4 E5:4 | C5:2 E5:2 G5:2 Bb5:2 A5:4 G5:4 |
-               F5:2 A5:2 C6:2 D6:2 C6:4 A5:4 | Bb5:2 A5:2 G5:2 F5:2 G5:4 C5:4 | D5:2 E5:2 F5:2 G5:2 A5:2 Bb5:2 A5:2 G5:2 | F5:4 C5:4 F5:8`],
-    [1, 0x50, `F2:3 F2:1 C3:2 F2:2 F2:3 F2:1 C3:2 A2:2 | C3:3 C3:1 G2:2 C3:2 F2:3 F2:1 C3:2 F2:2 | D3:3 D3:1 A2:2 D3:2 D3:3 D3:1 A2:2 F2:2 | C3:3 C3:1 G2:2 C3:2 C3:3 C3:1 G2:2 E2:2 |
-               F2:3 F2:1 C3:2 F2:2 F2:3 F2:1 C3:2 A2:2 | Bb2:3 Bb2:1 F2:2 Bb2:2 C3:3 C3:1 G2:2 C3:2 | Bb2:3 Bb2:1 F2:2 Bb2:2 C3:3 C3:1 G2:2 E2:2 | F2:3 F2:1 C3:2 F2:2 F2:4 R:4`],
-    [2, 0x20, `R:2 A4:1 R:1 C5:1 R:3 A4:1 R:1 C5:1 R:3 A4:2 | R:2 G4:1 R:1 C5:1 R:3 A4:1 R:1 C5:1 R:3 A4:2 | R:2 F4:1 R:1 A4:1 R:3 F4:1 R:1 A4:1 R:3 F4:2 | R:2 E4:1 R:1 Bb4:1 R:3 E4:1 R:1 G4:1 R:3 Bb4:2 |
-               R:2 A4:1 R:1 C5:1 R:3 A4:1 R:1 C5:1 R:3 A4:2 | R:2 F4:1 R:1 Bb4:1 R:3 E4:1 R:1 G4:1 R:3 E4:2 | R:2 D4:1 R:1 F4:1 R:3 E4:1 R:1 Bb4:1 R:3 G4:2 | R:2 A4:1 R:1 C5:1 R:3 A4:1 R:1 F4:1 R:3 A4:2`],
-  ] },
-  dia3: { tempo: 5, loop: true, ch: [
-    [0, 0x34, `D5:2 F#5:2 A5:2 D6:2 C#6:2 B5:2 A5:4 | G5:2 B5:2 A5:2 F#5:2 E5:4 R:4 | F#5:2 A5:2 D6:2 F#6:2 E6:2 D6:2 C#6:4 | B5:2 G5:2 E5:2 C#5:2 D5:8 |
-               A5:2 A5:1 A5:1 B5:2 A5:2 G5:2 F#5:2 E5:4 | F#5:2 F#5:1 F#5:1 G5:2 F#5:2 E5:2 D5:2 C#5:4 | D5:2 E5:2 F#5:2 G5:2 A5:2 B5:2 C#6:2 D6:2 | E6:4 C#6:4 D6:8`],
-    [1, 0x50, `D3:2 A2:2 D3:2 A2:2 D3:2 A2:2 F#2:2 A2:2 | G2:2 D3:2 G2:2 D3:2 A2:2 E3:2 A2:2 C#3:2 | D3:2 A2:2 D3:2 A2:2 D3:2 A2:2 F#2:2 A2:2 | G2:2 D3:2 A2:2 E3:2 D3:4 A2:4 |
-               A2:2 E3:2 A2:2 E3:2 A2:2 E3:2 C#3:2 E3:2 | D3:2 A2:2 D3:2 A2:2 A2:2 E3:2 A2:2 E3:2 | G2:2 D3:2 G2:2 D3:2 A2:2 E3:2 A2:2 E3:2 | A2:2 A2:2 A2:2 A2:2 D3:4 D2:4`],
-    [2, 0x1E, `R:2 F#4:2 R:2 A4:2 R:2 F#4:2 R:2 A4:2 | R:2 G4:2 R:2 B4:2 R:2 A4:2 R:2 C#5:2 | R:2 F#4:2 R:2 A4:2 R:2 F#4:2 R:2 A4:2 | R:2 B4:2 R:2 G4:2 R:2 F#4:2 R:2 A4:2 |
-               R:2 A4:2 R:2 C#5:2 R:2 A4:2 R:2 E4:2 | R:2 F#4:2 R:2 A4:2 R:2 E4:2 R:2 G4:2 | R:2 G4:2 R:2 B4:2 R:2 A4:2 R:2 C#5:2 | R:2 E4:2 R:2 G4:2 R:2 F#4:2 R:2 A4:2`],
-  ] },
-  chefe: { tempo: 6, loop: true, ch: [
-    [0, 0x34, `A4:2 C5:2 E5:2 A5:2 G5:3 E5:1 R:2 E5:2 | F5:2 E5:2 D5:2 C5:2 D5:4 R:4 | A4:2 C5:2 E5:2 A5:2 B5:3 G#5:1 R:2 E5:2 | A5:2 G#5:2 F5:2 E5:2 E5:8 |
-               D5:2 F5:2 A5:2 D6:2 C6:3 A5:1 R:2 A5:2 | B5:2 A5:2 G#5:2 F5:2 E5:4 R:4 | C6:2 B5:2 A5:2 G#5:2 A5:2 B5:2 C6:2 D6:2 | E6:4 B5:4 A5:8`],
-    [1, 0x50, `A2:2 A2:2 A3:2 A2:2 A2:2 A2:2 G3:2 A2:2 | F2:2 F2:2 F3:2 F2:2 G2:2 G2:2 G3:2 G2:2 | A2:2 A2:2 A3:2 A2:2 E2:2 E2:2 E3:2 E2:2 | F2:2 F2:2 F3:2 F2:2 E2:2 E2:2 G#2:2 B2:2 |
-               D3:2 D3:2 D3:2 D3:2 F2:2 F2:2 F3:2 F2:2 | E2:2 E2:2 E3:2 E2:2 E2:2 E2:2 B2:2 E3:2 | F2:2 F2:2 F3:2 F2:2 G2:2 G2:2 G3:2 G2:2 | E2:2 E2:2 E3:2 E2:2 A2:4 A2:4`],
-    [2, 0x1C, `R:2 E4:2 R:2 A4:2 R:2 E4:2 R:2 A4:2 | R:2 F4:2 R:2 A4:2 R:2 G4:2 R:2 B4:2 | R:2 E4:2 R:2 A4:2 R:2 E4:2 R:2 G#4:2 | R:2 F4:2 R:2 A4:2 R:2 E4:2 R:2 G#4:2 |
-               R:2 F4:2 R:2 A4:2 R:2 F4:2 R:2 A4:2 | R:2 E4:2 R:2 G#4:2 R:2 E4:2 R:2 B4:2 | R:2 F4:2 R:2 A4:2 R:2 G4:2 R:2 B4:2 | R:2 E4:2 R:2 G#4:2 R:2 E4:2 R:2 A4:2`],
-  ] },
+  // (as musicas do expediente agora sao a musica gravada: sounds/, gerador/sons.js)
   resultado: { tempo: 7, loop: true, ch: [
     [0, 0x30, `C5:2 E5:2 G5:2 E5:2 F5:4 A5:4 | G5:2 E5:2 C5:2 E5:2 D5:8 | C5:2 E5:2 G5:2 C6:2 B5:4 A5:4 | G5:4 F5:2 D5:2 C5:8`],
     [1, 0x48, `C3:4 G2:4 F2:4 A2:4 | C3:4 E3:4 G2:4 B2:4 | A2:4 E3:4 F2:4 C3:4 | G2:4 G2:4 C3:8`],
@@ -192,4 +222,4 @@ function musicData() {
   return { songs, sfx };
 }
 
-module.exports = { spcBlob, pitchTable, musicData, INSTR };
+module.exports = { spcBlob, pitchTable, musicData, INSTR, ARAM, SRCN };

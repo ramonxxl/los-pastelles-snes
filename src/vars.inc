@@ -116,11 +116,13 @@ r_duel:     .res 1
 tut_step:   .res 1
 tut_box:    .res 1
 tut_shown:  .res 1
+fry_lim:    .res 2      ; teto do progresso da fritura (no tutorial para no ponto)
 pause_sel:  .res 1
 splash_t:   .res 2
 masc_t:     .res 1
 opt_diff:   .res 1
 opt_music:  .res 1
+opt_falas:  .res 1      ; vozes gravadas ligadas (opcoes)
 d_unit:     .res 1
 echo_on:    .res 1
 ; bloco extra salvo em SRAM $700300 (preco + historico de lucro)
@@ -203,3 +205,50 @@ tw_line:    .res 2
 tw_attr:    .res 1
 tw_n:       .res 1
 hdma_tab:   .res 452
+; slots reservados no fim da OAM: botoes do texto (na frente) e pilula do rodape
+PILL_SLOTS = 16
+BTN_SLOTS  = 12
+OAM_PILL   = 4 * (128 - PILL_SLOTS)
+OAM_BTN    = OAM_PILL - 4 * BTN_SLOTS   ; AddSprite nao passa daqui
+btn_tab:    .res BTN_SLOTS * 4      ; [posicao no bg3_buf (2), glifo (1; 0 = livre), -]
+btn_tpos:   .res 2
+; vozes gravadas (src/voz.s)
+vz_cur:     .res 1      ; voz tocando ($FF = nenhuma)
+vz_carga:   .res 2      ; trios das vozes fixas que faltam carregar (boot)
+vz_pri:     .res 1
+vz_est:     .res 1      ; stream: 0 parado, 1 enchendo o anel, 2 tocando
+vz_resto:   .res 2      ; fixa: quadros que faltam
+vz_resta:   .res 3      ; stream: bytes da fonte que faltam
+vz_fim:     .res 1      ; a fonte acabou (manda silencio)
+vz_sil:     .res 2      ; bytes de silencio ja mandados depois do fim
+vz_nivel:   .res 3      ; bytes no anel ainda nao tocados (16.8)
+vz_cauda:   .res 3      ; o que faltava tocar quando a fonte acabou (16.8)
+vz_bpq:     .res 2      ; bytes tocados por quadro (8.8)
+vz_folga:   .res 2      ; bytes a manter no anel
+vz_anel:    .res 2      ; posicao de escrita no anel
+vz_tri:     .res 3
+vz_tmp:     .res 1
+vz_tmp2:    .res 2
+vz_ultima:  .res VOZ_N * 2   ; quadro em que cada voz tocou (para nao repetir)
+vz_modo:    .res 1
+tema_pend:  .res 1      ; titulo: musica + narracao quando a carga das vozes acabar
+; demonstracao (src/demo.s)
+demo_on:    .res 1
+demo_ocioso:.res 2
+demo_pad:   .res 2
+demo_lin:   .res 1
+demo_col:   .res 1
+demo_falta: .res 6
+apu_endx:   .res 1      ; ENDX lido no quadro
+mu_est:     .res 1      ; musica gravada: 0 parada, 1 enchendo, 2 tocando
+mu_resta:   .res 3
+mu_nivel:   .res 3
+mu_anel:    .res 2
+btn_tcode:  .res 1
+; pilula do rodape (Footer em ui.s)
+ft_on:      .res 1
+ft_pos:     .res 2      ; posicao do 1o caractere no bg3_buf
+ft_code:    .res 1      ; glifo esperado ali (se mudar, a pilula some)
+ft_x0:      .res 1
+ft_x1:      .res 1      ; x da peca da direita
+ft_y:       .res 1

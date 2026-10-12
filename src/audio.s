@@ -43,16 +43,33 @@ ApuUpload:
     cmp APUIO0
     bne @w4
     sta apu_cnt
+    sta apu_ult
+    lda #$D5                ; espera o driver avisar que esta pronto
+@w5:
+    cmp APUIO1
+    bne @w5
     rts
+
+; espera o SPC700 confirmar o envio anterior (os dados vao em pipeline)
+.macro APU_ESPERA
+    .local w
+    lda apu_ult
+w:  cmp APUIO0
+    bne w
+.endmacro
 
 ; X = (valor << 8) | registrador
 DspWrite:
     .a8
     .i16
+    APU_ESPERA
     stx APUIO1
+DspEnvia:
     lda apu_cnt
     inc a
+    and #$3F                ; bits 7/6 da porta 0 = 0: comando (dados: ApuTrio)
     sta apu_cnt
+    sta apu_ult
     sta APUIO0
 @w: cmp APUIO0
     bne @w
@@ -75,10 +92,10 @@ AudioInit:
     DSP $2C, $00        ; volume do eco
     DSP $3C, $00
     DSP $2D, $00        ; PMON
-    DSP $3D, $40        ; NON: voz 6 = ruido
+    DSP $3D, $00        ; NON: sem ruido (o chiado agora e gravado)
     DSP $5D, $03        ; DIR = $0300
     DSP $6D, $D0        ; ESA = $D000 (buffer do eco)
-    DSP $7D, $03        ; EDL = 48 ms
+    DSP $7D, $02        ; EDL = 32 ms ($D000-$DFFF; o resto e o anel das falas)
     DSP $0D, $38        ; feedback do eco
     DSP $4D, $05        ; eco nas vozes 0 (melodia) e 2 (acordes)
     DSP $0F, $7F        ; filtro FIR
@@ -89,14 +106,14 @@ AudioInit:
     DSP $5F, $00
     DSP $6F, $00
     DSP $7F, $00
-    ; voz 6: chiado da fritura
-    DSP $64, $00
+    ; voz 6: chiado da fritura (gravado, em loop)
+    DSP $64, SRCN_FRITURA
     DSP $65, $FF
     DSP $66, $E0
-    DSP $60, $0E
-    DSP $61, $0E
-    DSP $62, $00
-    DSP $63, $10
+    DSP $60, $16
+    DSP $61, $16
+    DSP $62, <FRITURA_PITCH
+    DSP $63, >FRITURA_PITCH
     DSP $6C, $3B        ; FLG: eco desligado + clock do ruido
     ldx #0
 @c: stz ch_on,x
@@ -105,7 +122,7 @@ AudioInit:
     bne @c
     lda #3
     sta sfx_next
-    rts
+    jmp VozInit             ; vozes fixas na memoria do SPC700
 
 ; toca musica A (reinicia so se for diferente da atual)
 PlaySong:
@@ -114,7 +131,10 @@ PlaySong:
     cmp cur_song
     bne :+
     rts
-:   sta cur_song
+:   pha                     ; outra musica: a gravada para
+    jsr MusPara
+    pla
+    sta cur_song
     lda opt_music
     bne :+
     stz ch_on
@@ -164,6 +184,7 @@ PlaySong:
 StopMusic:
     .a8
     .i16
+    jsr MusPara             ; musica desligada: a gravada tambem
     stz ch_on
     stz ch_on+1
     stz ch_on+2
@@ -207,6 +228,10 @@ PlaySfx:
 AudioUpdate:
     .a8
     .i16
+    lda APUIO1              ; ENDX do ultimo comando de DSP (falas e musica usam)
+    sta apu_endx
+    jsr VozQuadro
+    jsr MusQuadro
     stz kon_pend
     stz kof_pend
     ldx #0

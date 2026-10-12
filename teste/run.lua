@@ -1,5 +1,6 @@
 -- roteiro: tabela de {quadro, botoes} e quadros de screenshot (definidos em cenario.lua)
-local dir = "C:/Users/ramon/Desktop/Jogo Snes/teste/"
+-- pasta teste/ (descoberta pelo caminho do script; senao, relativo a raiz do repositorio)
+local dir = (debug and debug.getinfo and (debug.getinfo(1, "S").source or ""):match("^@(.*[/\\])")) or "teste/"
 dofile(dir .. "cenario.lua")
 local f = 0
 local log = io.open(dir .. "log.txt", "w")

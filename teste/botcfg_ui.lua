@@ -1,4 +1,6 @@
-dofile("C:/Users/ramon/Desktop/Jogo Snes/teste/botcfg_b.lua")
+-- pasta teste/ (descoberta pelo caminho do script; senao, relativo a raiz do repositorio)
+local dir = (debug and debug.getinfo and (debug.getinfo(1, "S").source or ""):match("^@(.*[/\\])")) or "teste/"
+dofile(dir .. "botcfg_b.lua")
 ENDF = 8700
 local SHOP0 = SHOP
 local esperou, lastsel, fase = 0, -1, 0

@@ -6,7 +6,7 @@ from PIL import Image, ImageDraw, ImageFont
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, 'cartucho')
 os.makedirs(OUT, exist_ok=True)
-F = 'C:/Windows/Fonts/'
+F = os.environ.get('FONTES', 'C:/Windows/Fonts/').rstrip('/\\') + '/'  # pasta das fontes (impact, arial...)
 def fonte(nome, tam): return ImageFont.truetype(F + nome, tam)
 CREME, LARANJA, LARANJA2, VERMELHO, MARROM, BRANCO = '#FDF1E0', '#FAA61E', '#E88607', '#DA4804', '#3A1A0C', '#FFFFFF'
 

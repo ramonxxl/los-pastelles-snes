@@ -2,7 +2,7 @@
 
 Desenvolvido por **Ramon de Oliveira** — loja: [www.lospastelles.com.br](https://www.lospastelles.com.br)
 
-**`LosPastelles.sfc`** é uma ROM real de SNES (LoROM, 1 MB, 2 KB de SRAM com bateria).
+**`LosPastelles.sfc`** é uma ROM real de SNES (LoROM, 1 MB, 2 KB de SRAM com bateria), com vozes e música gravadas.
 Funciona em emuladores (Mesen, bsnes, Snes9x) e em cartucho flash (EverDrive, FXPAK etc.).
 
 ## Como jogar
@@ -13,7 +13,7 @@ Funciona em emuladores (Mesen, bsnes, Snes9x) e em cartucho flash (EverDrive, FX
 5. O cursor vai sozinho até quem pediu aquele sabor: aperte A. Balão com latinha = **combo**: pegue o refri (X) antes de entregar (+R$ 7).
 6. No fim do dia: resultado (vendas, gorjetas, aluguel, salários, lucro). Depois, a loja:
    ingredientes, fritadeira, balcão, promoção, atendente, publicidade, novas lojas, franquias e mapa.
-   "Abrir a loja" salva o jogo.
+   "Abrir a loja" salva o jogo e começa o próximo dia; "Voltar ao menu" salva e volta à tela inicial (CONTINUAR retoma de onde parou).
 
 ## Conteúdo
 - Tela de título com a logo oficial e cores da marca no jogo todo; mascote (pastelzinho piscando) nas cartas, na loja e comemorando cada pastel perfeito.
@@ -23,7 +23,10 @@ Funciona em emuladores (Mesen, bsnes, Snes9x) e em cartucho flash (EverDrive, FX
 - Cestos da fritadeira podem quebrar: aperte A no cesto com X e repita 5 botões para consertar.
 - "+R$" flutuando a cada venda, óleo animado, barra de paciência piscando no vermelho.
 - Preço do pastel ajustável na loja (-R$1 até +R$2) e gráfico de lucro dos últimos 7 dias no fim do dia.
-- Opções: dificuldade (Fácil/Normal/Difícil) e música; escolha do bairro onde trabalhar (5 cenários).
+- Opções: dificuldade (Fácil/Normal/Difícil), música e falas (liga/desliga as vozes gravadas); escolha do bairro onde trabalhar (5 cenários).
+- Demonstração: com o título parado 30 s, a CPU joga um expediente num estágio sorteado (qualquer botão volta ao menu).
+- Sabores e ícones do expediente com emojis (Twemoji): carne, queijo, frango, bacon, cadeado, coração, moeda, estrela, telefone, computador, moto e efeitos.
+- Menus modernos: título com a logo sobre o xadrez animado e um cartão com o menu, ícones emoji em cada item, pílula no item escolhido e botões coloridos do controle nas dicas.
 - Eventos: feira, concorrente, chuva e jogo do Brasil na TV.
 - Pedido duplo (nível 4+): balão com "2" = entregue dois pastéis.
 - Duelo semanal com o Concorrente (dias 7, 14, 21...): bata a meta de clientes satisfeitos e ganhe R$ 100.
@@ -38,7 +41,8 @@ Funciona em emuladores (Mesen, bsnes, Snes9x) e em cartucho flash (EverDrive, FX
 - 5 capítulos e 4 desafios: Hora do Almoço, Desafio do Sabor, Cozinha em Crise, Expansão Nacional.
 - 15 missões, níveis/XP, reputação, eventos (feira, promoção do concorrente).
 - Mapa da expansão; final ao chegar a 10 unidades (lojas + franquias).
-- Música chiptune (título, expediente, desafio, resultado, vitória, derrota) e efeitos sonoros.
+- Música-tema gravada na tela de título (com a narração "Los Pastelles, o império do pastel") e durante o expediente; música chiptune nas outras telas (abertura, resultado, vitória, derrota) e efeitos sonoros.
+- Vozes gravadas: o pastel fechou, abriu, cru, queimou, "olha o pastel!", "top demais", sabor errado, combo com refri, cliente desistindo, telefone, cesto quebrado, "bom dia, freguesia!", "por hoje é só", missão cumprida, troféu, desafio, vitória, derrota e o final. Chiado da fritura gravado.
 
 ## Recompilar
 Requer Node.js e Python com Pillow. `node build.js` gera a arte, a fonte, os textos, a música e
