@@ -85,8 +85,8 @@ AudioInit:
     .i16
     DSP $6C, $20        ; FLG: eco desligado
     DSP $4C, $00        ; KON
-    DSP $5C, $FF        ; KOF
-    DSP $5C, $00
+    lda #$FF            ; KOF em todas (fica ate o 1o AudioUpdate)
+    jsr VozesDesliga
     DSP $0C, $58        ; volume mestre
     DSP $1C, $58
     DSP $2C, $00        ; volume do eco
@@ -140,9 +140,9 @@ PlaySong:
     stz ch_on
     stz ch_on+1
     stz ch_on+2
-    DSP $5C, $07
-    rts
-:   ; liga o eco na primeira musica (o buffer ja foi limpo pelo tempo)
+    lda #$07
+    jmp VozesDesliga
+:   ; liga o eco na primeira musica (o driver zerou o buffer, e o EDL novo ja vale)
     lda echo_on
     bne :+
     lda #1
@@ -190,8 +190,8 @@ StopMusic:
     stz ch_on+2
     lda #$FF
     sta cur_song
-    DSP $5C, $07
-    rts
+    lda #$07
+    jmp VozesDesliga
 
 ; efeito sonoro A
 PlaySfx:
@@ -232,8 +232,7 @@ AudioUpdate:
     sta apu_endx
     jsr VozQuadro
     jsr MusQuadro
-    stz kon_pend
-    stz kof_pend
+    stz kon_pend            ; (o kof_pend junta o quadro todo e so zera depois de escrito)
     ldx #0
 @ch:
     lda ch_on,x
@@ -264,18 +263,66 @@ AudioUpdate:
     lda #$40
     tsb kof_pend
 @nosz:
-    lda kof_pend
-    xba
-    lda #$5C
-    tax
-    jsr DspWrite
+    lda kof_pend            ; o KOF fica escrito ate o proximo quadro
+    sta kof_atual
+    stz kof_pend
+    jsr KofEscreve
     lda kon_pend
     beq @nokon
+    jmp KonEscreve
+@nokon:
+    rts
+
+; O DSP so le o KOF e o KON a cada 2 amostras (~64 us). No console um KOF desfeito
+; antes disso nao desligava a voz (a fala ficava em loop no anel, um chiado sem fim),
+; e um KON escrito logo depois de outro apagava o primeiro. Por isso:
+;  - o KOF so baixa no AudioUpdate seguinte (kof_atual guarda o que esta escrito);
+;  - depois de cada KON espera o DSP ler.
+
+; A = vozes: desliga agora e mantem desligadas ate o proximo AudioUpdate
+VozesDesliga:
+    .a8
+    .i16
+    tsb kof_pend
+    tsb kof_atual
+    lda kof_atual
+    bra KofEscreve
+
+; A = vozes: tira do KOF e liga
+VozesLiga:
+    .a8
+    .i16
+    pha
+    trb kof_pend
+    trb kof_atual
+    lda kof_atual
+    jsr KofEscreve
+    pla
+KonEscreve:                 ; A = KON; espera o DSP ler (preserva X e Y)
+    .a8
+    .i16
+    phx
+    phy
     xba
     lda #$4C
     tax
     jsr DspWrite
-@nokon:
+    ldy #100                ; ~100 us com o CPU rapido (2 amostras = 63 us)
+:   dey
+    bne :-
+    ply
+    plx
+    rts
+
+KofEscreve:                 ; A = KOF (preserva X e Y)
+    .a8
+    .i16
+    phx
+    xba
+    lda #$5C
+    tax
+    jsr DspWrite
+    plx
     rts
 
 ; le eventos do canal X ate encontrar nota/pausa

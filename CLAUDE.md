@@ -138,11 +138,13 @@ The generator modules:
 
 ### Audio (SPC700) and recorded voices
 - **The driver** (`DRIVER` in `gerador/audio.js`) is hand-assembled SPC700 code, using the small assembler `monta`. ca65 doesn't assemble SPC700. It's uploaded via IPL to `$0200`.
-  - When it starts, it reads port 0 and only then signals "ready" (`$D5` on port 1). `ApuUpload` waits for that signal.
+  - When it starts, it reads port 0, zeroes the echo buffer (`$D000–$DFFF`) and only then signals "ready" (`$D5` on port 1). `ApuUpload` waits for that signal.
+  - It reads port 0 twice and accepts a command only when both reads match (see "Real hardware vs. emulator" below).
   - Port 0 changes on every command:
     - **Bit 7 = 1 (data):** 3 bytes (ports 1–3) go to write pointer A (`$02`, bit 6 = 0: music and the fixed-voice load) or B (`$06`, bit 6 = 1: speech), which advances 3. Data commands don't return status, which keeps them fast.
     - **Bit 7 = 0:** port 1 = DSP register and port 2 = value; port 1 = `$80`/`$81` sets pointer A/B to port 2/3. These commands return `ENDX` on port 1.
   - It always echoes port 0. Sending is pipelined: `APU_ESPERA` waits for the previous command's echo before writing to the ports. `ApuTrio`/`LOTE` don't wait for their own echo. `DspWrite` does.
+- **Keying voices on/off:** always go through `VozesLiga`/`VozesDesliga` (`audio.s`), never write KON/KOF (`$4C`/`$5C`) directly. A KOF stays written until the next `AudioUpdate` (`kof_atual`), and each KON waits ~100 µs, because the DSP only polls KON/KOF every 2 samples (~64 µs).
 - **SPC700 memory** (`ARAM` in `audio.js`):
 
   | Range | Contents |
@@ -223,6 +225,27 @@ Everything goes back to normal after the first delivery (`tut_step = $FF`). `tes
 `MainLoop` in `main.s` dispatches through the `StateInit`/`StateUpdate` jump tables (`src/telas.s`), indexed by `state`. The `ST_*` constants are defined at the top of `src/game.s` (title, intro, card, preday, day, results, shop, map, options, choose, slots, splash, trophies, secret). To change screens, write to `next_state`. The main loop runs the new state's Init once, then calls Update every frame, followed by `UiUpdate`, `AudioUpdate`, `WaitFrame` and `ReadPad`. NMI uploads OAM, palettes and VRAM from RAM buffers.
 - `game.s` is the in-day gameplay: frying, customers, minigame, deliveries. `telas.s` holds the screens and menus, `extra.s` additional features, `segredo.s` the secret cheat menu, `ui.s` the HDMA panels and icons, and `audio.s` the APU upload and the music and SFX sequencer.
 - `src/vars.inc` declares the RAM variables. The block between `save_start` and `save_end` is copied to SRAM as one unit (3 save slots) and **must stay contiguous**. Adding, removing or reordering fields there changes the save format.
+
+### Real hardware vs. emulator (lessons from past bugs)
+Mesen passing is not proof that the game works on a console. These bugs reached a real SNES (FXPAK) after passing every emulator test. Keep these rules in mind:
+- **Never assume memory or registers start at zero.** Console RAM, SPC700 ARAM, DSP registers and DMA registers start with random or leftover values (a flashcart boots the game from its own menu, which leaves state behind). Clear everything you later read, including buffers a peripheral reads by itself, such as the echo buffer.
+- **Cross-chip handshakes must tolerate glitches.** A port read at the same moment the other CPU writes it can return wrong bits. Read a changing value until two consecutive reads match, and write the data ports before the port that signals "new command".
+- **Respect the hardware's sampling period.** If a chip polls a register periodically (the DSP polls KON/KOF every ~64 µs), a value written and undone faster than that may never be seen, and that depends on timing phase, so the emulator can happen to pass. Hold values for at least one poll period, and don't overwrite a pending command before it's consumed.
+- **Fail-safe state machines.** If a "stop" command can be lost, the effect shouldn't loop forever. Prefer designs where a missed command self-corrects (rewritten every frame, or data that ends naturally).
+- **Saved settings change behavior.** A cartridge keeps its SRAM between ROM versions, and the tests always start without a save. When something "doesn't play" or "doesn't show" only on the user's device, first rule out a saved option (e.g. MÚSICA off) before debugging code.
+- **Debug by isolation.** Ask questions that split the problem: which voice or screen, does it stop, does turning an option off make it go away. Then measure in Mesen with Lua (`emu.getState()` exposes DSP voice state, `emu.memType.spcRam` the ARAM) rather than guessing.
+
+### General rules from past fixes
+- **Scanline sprite limit:** sprites hidden behind something still count toward the 32 sprites / 34 tiles per line. Hide them (move off-screen) instead of only lowering their priority, or the last OAM slots (buttons, pill) drop out.
+- **Pixel alignment of overlays:** sprites that overlay text must align exactly to the 8×8 grid. Off-by-one positions get cut by the shadow of neighboring glyphs.
+- **Let the build enforce limits.** Text that overflows a box, width mismatches (`checa_largura.py`), the sample directory order and the bank sizes all fail the build. When a new limit appears, add a check in `build.js` instead of relying on review.
+- **Tests must start clean and be independent.** Each Mesen test runs without a save (delete `teste/mesen/Saves`); a leftover save from a previous test made a test fail for no real reason.
+- **No machine-specific paths.** Scripts find their files relative to themselves (`debug.getinfo`, `__dirname`), and tools/fonts/interpreters come from env vars with per-OS defaults.
+- **Use relative links in docs.** Absolute links to a fork's releases break in the original repo and in other forks.
+- **Long or blocking work shouldn't freeze the screen.** Start dependent features when the prerequisite finishes (e.g. the title song waits for the fixed-voice load) instead of blocking the main loop.
+- **Progress that must survive leaving mid-way is saved at the moment it happens** (e.g. the tutorial bit goes straight to SRAM on the first delivery).
+- **Bank 0 is full.** New sizeable routines go to another bank with `JSL`/`RTL`, and can only call routines in the same bank.
+- **Keep CI dependencies current.** Update GitHub Actions before their runtime is deprecated.
 
 ### Other folders
 `cartucho/` holds the label, manual, photos and exported art for the physical cartridge. `trailer/` holds the final trailer MP4. `roteiro_*.md` is the game's design and story script.

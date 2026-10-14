@@ -111,6 +111,7 @@ apu_cnt:    .res 1
 apu_ult:    .res 1      ; ultimo valor enviado na porta 0 (espera o eco dele)
 kon_pend:   .res 1
 kof_pend:   .res 1
+kof_atual:  .res 1      ; valor que esta no KOF do DSP (fica ate o proximo AudioUpdate)
 cur_song:   .res 1
 sfx_next:   .res 1
 sizzle_on:  .res 1

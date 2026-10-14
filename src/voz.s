@@ -261,9 +261,8 @@ VozToca:
     plx
     sta vz_resto
     A8
-    DSP $5C, $00
-    DSP $4C, $80
-    rts
+    lda #$80
+    jmp VozesLiga
 @stream:
     phx
     phy
@@ -286,7 +285,8 @@ VozToca:
     A8
     stz vz_nivel+2
     stz vz_fim
-    DSP $5C, $80            ; para a voz enquanto o anel enche
+    lda #$80                ; para a voz enquanto o anel enche
+    jsr VozesDesliga
     ldx #FALA_ARAM          ; ponteiro B no inicio do anel das falas
     jsr ApuPonteiroB
     DSP $7C, $00            ; limpa o ENDX (avisa quando a voz da a volta no anel)
@@ -335,7 +335,8 @@ VozPara:
     lda #$FF
     sta vz_cur
     stz vz_est
-    DSP $5C, $80
+    lda #$80
+    jsr VozesDesliga
 :   rts
 
 ; proximos 3 bytes da fala em vz_tri (silencio depois do fim)
@@ -576,8 +577,8 @@ VozBomba:
     bcc :+
     lda #2
     sta vz_est
-    DSP $5C, $00
-    DSP $4C, $80
+    lda #$80
+    jsr VozesLiga
 :   rts
 
 ; uma vez por quadro: o que tocou sai do nivel; fim da fala
@@ -665,7 +666,8 @@ MusToca:
     rts
 :   jsr VozCargaFim         ; (a carga das fixas usa o mesmo ponteiro A)
     jsr MusFonte
-    DSP $5C, $02            ; para a voz enquanto o anel enche
+    lda #$02                ; para a voz enquanto o anel enche
+    jsr VozesDesliga
     DSP $10, $48            ; volume abaixo das falas
     DSP $11, $48
     DSP $15, $00            ; GAIN direto
@@ -713,7 +715,8 @@ MusPara:
     lda mu_est
     beq :+
     stz mu_est
-    DSP $5C, $02
+    lda #$02
+    jsr VozesDesliga
 :   rts
 
 ; proximos 3 bytes da musica (recomeca no fim; o tamanho e multiplo de 9)
@@ -914,8 +917,8 @@ MusBomba:
     bcc :+
     lda #2
     sta mu_est
-    DSP $5C, $00
-    DSP $4C, $02
+    lda #$02
+    jsr VozesLiga
 :   rts
 
 MusQuadro:

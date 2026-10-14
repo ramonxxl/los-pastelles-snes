@@ -6,6 +6,7 @@
 //  $D000-$DFFF eco (ESA/EDL=2) | $E000-$E7FA anel das falas (227 blocos BRR)
 //  $E800-$FFBA anel da musica (675 blocos BRR)
 const ARAM = { DRIVER: 0x0200, DIR: 0x0300, FIXAS: 0x0400, FIXAS_FIM: 0xD000,
+  ECO: 0xD000, ECO_FIM: 0xE000,
   FALA: 0xE000, FALA_LEN: 227 * 9, MUSICA: 0xE800, MUSICA_LEN: 675 * 9 };
 const SRCN = { MUSICA: 3, FRITURA: 4, FALA: 5, FIXA0: 6 };   // 0-2: ondas do chiptune
 
@@ -43,11 +44,27 @@ const DADOS = (p) => [
   [0xE4, 0xF7, 0xD7, p],
   [0x60, 0x98, 0x03, p, 0x98, 0x00, p + 1],           // clrc / adc p,#3 / adc p+1,#0
 ];
+// No console a leitura de uma porta no mesmo instante em que o CPU a escreve pode
+// vir com bits errados (os emuladores nao imitam isso). Um valor errado na porta 0
+// virava um comando a mais (dados repetidos, que desalinham o BRR, ou escrita num
+// registrador qualquer do DSP) e o som virava zumbido. Por isso a porta 0 e lida
+// duas vezes e so vale quando as duas leituras batem.
+// A RAM do SPC700 tambem nao comeca zerada no console: o driver zera o buffer do
+// eco antes de avisar "pronto", senao o eco toca lixo ao ser ligado.
 const DRIVER = monta(ARAM.DRIVER, [
   [0xE4, 0xF4, 0xC4, 0x00],                           // mov a,$F4 / mov $00,a
+  [0xE8, 0x00, 0x8D, 0x00],                           // mov a,#0 / mov y,#0
+  [0x8F, 0x00, 0x04, 0x8F, hi(ARAM.ECO), 0x05],       // $04/$05 = inicio do eco
+  { rot: 'zera' },
+  [0xD7, 0x04, 0xFC],                                 // mov [$04]+y,a / inc y
+  { br: 0xD0, alvo: 'zera' },                         // bne zera
+  [0xAB, 0x05, 0x78, hi(ARAM.ECO_FIM), 0x05],         // inc $05 / cmp $05,#fim
+  { br: 0xD0, alvo: 'zera' },                         // bne zera
   [0x8F, 0xD5, 0xF5],                                 // mov $F5,#$D5 (pronto)
   { rot: 'laco' },
-  [0xE4, 0xF4, 0x64, 0x00],                           // mov a,$F4 / cmp a,$00
+  [0xE4, 0xF4, 0x64, 0xF4],                           // mov a,$F4 / cmp a,$F4
+  { br: 0xD0, alvo: 'laco' },                         // bne laco (mudou no meio)
+  [0x64, 0x00],                                       // cmp a,$00
   { br: 0xF0, alvo: 'laco' },                         // beq laco
   [0xC4, 0x00],                                       // mov $00,a
   { br: 0xF3, pre: [0x00], alvo: 'cmd' },             // bbc7 $00,cmd
