@@ -77,6 +77,6 @@ function decode(buf) {
 }
 
 // muda quando o codificador muda: invalida o cache dos sons ja convertidos
-const VERSAO = 2;
+const VERSAO = 3;                  // 3: reforco de agudos e soxr (sons.js)
 
 module.exports = { encode, decode, VERSAO };

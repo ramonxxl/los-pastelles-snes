@@ -112,3 +112,37 @@ skip:
     jmp target
 skip:
 .endmacro
+
+; ---------------------------------------------------------------- fora do banco 0
+; Chama, de outro banco, uma rotina do banco 0 que termina em RTS: o RTS cai no
+; RTL de Rtl0 (banco 0), que volta para quem chamou. Nao mexe em A/X/Y.
+.macro FAR0 rot
+    phk
+    per * + 9               ; volta = fim do jml (per 3 + pea 3 + jml 4), menos 1
+    pea .loword(Rtl0-1)
+    jml f:rot
+.endmacro
+
+.macro PRINT0 str, col, row, pal
+    ldx #((row)*32+(col))
+    stx txt_pos
+    lda #(((pal)<<2)|$20)
+    sta txt_attr
+    ldx #str
+    FAR0 PrintStr
+.endmacro
+
+.macro PRINTNUM16_0 var, col, row, pal, width
+    A16
+    lda var
+    sta num
+    stz num+2
+    A8
+    ldx #((row)*32+(col))
+    stx txt_pos
+    lda #(((pal)<<2)|$20)
+    sta txt_attr
+    lda #width
+    sta num_w
+    FAR0 PrintNum
+.endmacro

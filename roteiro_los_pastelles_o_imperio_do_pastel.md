@@ -253,7 +253,7 @@ O cardápio poderá utilizar os sabores reais da Los Pastelles como parte da pro
 
 ### Sabores e ingredientes desbloqueáveis
 - Calabresa.
-- Catupiry.
+- Requeijão cremoso.
 - Presunto.
 - Milho.
 - Bacon.

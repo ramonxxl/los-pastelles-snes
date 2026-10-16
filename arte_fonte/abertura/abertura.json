@@ -1,0 +1,616 @@
+{
+ "descricao": "Abertura RAMON (homenagem a Konami): gerada por gerador/abertura_ramon.py",
+ "logo": {
+  "x": 61,
+  "y": 33,
+  "linhas": [
+   "................................................IIIIIIIIIIIIIIIIIIIIIII............................................................",
+   "..........................................IIIIIIJJJJJJJJJJJJJJJJJJJJJJJIIIIII......................................................",
+   ".......................................IIILJJJJJUUUUUUUUUUUUUUUUUUUUUUUJJJJJIIII...................................................",
+   "...................................I.IILLJVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVJIIII.I...............................................",
+   ".................................IILIJJVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVJJIIII.............................................",
+   "................................ILLLJUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUJUIIII...........................................",
+   "..............................IILLUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUIIII.........................................",
+   "............................IILLUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUIIII.......................................",
+   "...........................ILLLUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUIIII.....................................",
+   ".........................IILLUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUIIII....................................",
+   "........................ILLLTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTIIII...................................",
+   ".......................ILLLTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTIIII..................................",
+   "......................ILLLUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUIIII.................................",
+   ".....................ILLLTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTIIII................................",
+   ".....................KLLLTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTIIII...............................",
+   "....................ILLLTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTIIII..............................",
+   "...................ILLLTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTIIIJ..............................",
+   "...................KLLLUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUIIII.............................",
+   "..................ILLLUUUUUUUUUUUUUUUUUUUUUUUUUUUULLLLLLLLLLLUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUIIII............................",
+   ".................ILLLTTTTTTTTTTTTTTTTTTTTTTTTTLLLL...........LLLLTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTIIII...........................",
+   ".................KLLLTTTTTTTTTTTTTTTTTTTTTIILL..................LLLLTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTIIIJ...........................",
+   "................ILLLTTTTTTTTTTTTTTTTTTTTIIIL......................LLLLTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTIIII..........................",
+   "................KLLLTTTTTTTTTTTTTTTTTTTIIIL.........................LLLLTTTTTTTTTTTTTTTTTTTTTTTTTTTTTIIIJ..........................",
+   "...............ILLLTTTTTTTTTTTTTTTTTTTIIIJ...........................LLLLTTTTTTTTTTTTTTTTTTTTTTTTTTTTTIIII.........................",
+   "...............KLLLSSSSSSSSSSSSSSSSSSSIIIL............................LLLLSSSSSSSSSSSSSSSSSSSSSSSSSSSSIIIJ.........................",
+   "..............ILLLSSSSSSSSSSSSSSSSSSSIIIJ..............................LLLLSSSSSSSSSSSSSSSSSSSSSSSSSSSIIIJ.........................",
+   "..............KLLLTTTTTTTTTTTTTTTTTTTIIIJ...............................LLLLTTTTTTTTTTTTTTTTTTTTTTTTTTIIIJ.........................",
+   "..............KLLLSSSSSSSSSSSSSSSSSSSIIIL................................KLLLSSSSSSSSSSSSSSSSSSSSSSSSSSIIII........................",
+   "..............KLLLSSSSSSSSSSSSSSSSSSIIIJ.................................LLLLSSSSSSSSSSSSSSSSSSSSSSSSSSIIIJ........................",
+   ".............ILLLSSSSSSSSSSSSSSSSSSSIIIJ..................................LLLLSSSSSSSSSSSSSSSSSSSSSSSSSIIIJ........................",
+   ".............KLLLSSSSSSSSSSSSSSSSSSSIIIL...................................KLLLSSSSSSSSSSSSSSSSSSSSSSSSSIIII.......................",
+   ".............KLLLTTTTTTTTTTTTTTTTTTIIIJ....................................KLLLTTTTTTTTTTTTTTTTTTTTTTTTTIIIJ.......................",
+   ".............KLLLSSSSSSSSSSSSSSSSSSIIIJ....................................KLLLSSSSSSSSSSSSSSSSSSSSSSSSSIIIJ.......................",
+   ".............KLLLSSSSSSSSSSSSSSSSSSIIIJ....................................LLLLSSSSSSSSSSSSSSSSSSSSSSSSSIIIJ.......................",
+   ".............KLLLSSSSSSSSSSSSSSSSSSIIIJ.....................................KLLLSSSSSSSSSSSSSSSSSSSSSSSSIIIJ.......................",
+   "............ILLLSSSSSSSSSSSSSSSSSSSIIIJ.....................................KLLLSSSSSSSSSSSSSSSSSSSSSSSSIIIJ.......................",
+   "............KLLLSSSSSSSSSSSSSSSSSSSIIIJ.....................................KLLLSSSSSSSSSSSSSSSSSSSSSSSSIIIJ.......................",
+   "............KLLLSSSSSSSSSSSSSSSSSSSIIIJ.....................................KLLLSSSSSSSSSSSSSSSSSSSSSSSSIIIJ.......................",
+   "............KLLLRRRRRRRRRRRRRRRRRRRIIIJ.....................................KLLLRRRRRRRRRRRRRRRRRRRRRRRRIIIJ.......................",
+   "............KLLLSSSSSSSSSSSSSSSSSSSIIIJ.....................................KLLLSSSSSSSSSSSSSSSSSSSSSSSSIIIJ.......................",
+   "............KLLLSSSSSSSSSSSSSSSSSSSIIIJ.....................................KLLLSSSSSSSSSSSSSSSSSSSSSSSSIIIL.......................",
+   "............KLLLRRRRRRRRRRRRRRRRRRRIIIJ.....................................KLLLRRRRRRRRRRRRRRRRRRRRRRRIIIJ........................",
+   "............KLLLRRRRRRRRRRRRRRRRRRRIIIJ.....................................KLLLRRRRRRRRRRRRRRRRRRRRRRRIIIJ........................",
+   "............KLLLRRRRRRRRRRRRRRRRRRRIIIJ.....................................KLLLRRRRRRRRRRRRRRRRRRRRRRRIIIJ........................",
+   "............KLLLRRRRRRRRRRRRRRRRRRRIIIJ....................................ILLLRRRRRRRRRRRRRRRRRRRRRRRRIIIL........................",
+   "............KLLLSSSSSSSSSSSSSSSSSSSIIIJ....................................KLLLSSSSSSSSSSSSSSSSSSSSSSSIIIJ.........................",
+   "............KLLLRRRRRRRRRRRRRRRRRRRIIIJ...................................ILLLRRRRRRRRRRRRRRRRRRRRRRRRIIIJ.........................",
+   "............KLLLRRRRRRRRRRRRRRRRRRRIIIJ...................................KLLLRRRRRRRRRRRRRRRRRRRRRRRRIIIL.........................",
+   "............KLLLRRRRRRRRRRRRRRRRRRRIIIJ...................................KLLLRRRRRRRRRRRRRRRRRRRRRRRIIIJ..........................",
+   "............KLLLRRRRRRRRRRRRRRRRRRRIIIJ..................................ILLLRRRRRRRRRRRRRRRRRRRRRRRRIIIJ..........................",
+   "............KLLLRRRRRRRRRRRRRRRRRRRIIIJ.................................ILLLRRRRRRRRRRRRRRRRRRRRRRRRRIIIL..........................",
+   "............KLLLQQQQQQQQQQQQQQQQQQQIIIJ................................ILLLQQQQQQQQQQQQQQQQQQQQQQQQQIIIJ...........................",
+   "............KLLLQQQQQQQQQQQQQQQQQQQIIIJ................................KLLLQQQQQQQQQQQQQQQQQQQQQQQQQIIIL...........................",
+   "............KLLLRRRRRRRRRRRRRRRRRRRIIIJ...............................ILLLRRRRRRRRRRRRRRRRRRRRRRRRRIIIL............................",
+   "............KLLLRRRRRRRRRRRRRRRRRRRIIIJ.............................IILLRRRRRRRRRRRRRRRRRRRRRRRRRRIIIL.............................",
+   "............KLLLQQQQQQQQQQQQQQQQQQQIIIJ...........................IILLQQQQQQQQQQQQQQQQQQQQQQQQQQQIIIL..............................",
+   "............KLLLQQQQQQQQQQQQQQQQQQQIIIJ.........................IILLQQQQQQQQQQQQQQQQQQQQQQQQQQQQIIIL...............................",
+   "............KLLLQQQQQQQQQQQQQQQQQQQIIIJ...................II.IIILJQQQQQQQQQQQQQQQQQQQQQQQQQQQQQIIIL................................",
+   "............KLLLRRRRRRRRRRRRRRRRRRRIIIJ...............IIIIJJIJJJRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRIILL.................................",
+   "............KLLLRRRRRRRRRRRRRRRRRRRIIIJ.....IIIIIIIIIIJJJJRRJRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRIIIL...................................",
+   "............KLLLQQQQQQQQQQQQQQQQQQQIIIJ.IIIIJJJJJJJJJJQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQIIIL....................................",
+   "............KLLLQQQQQQQQQQQQQQQQQQQQQQQIJJJJQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQIIIL.....................................",
+   "............KLLLQQQQQQQQQQQQQQQQQQQQQQQJQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQIILL......................................",
+   "............KLLLQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQIILL........................................",
+   "............KLLLQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQILLL..........................................",
+   "............KLLLPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPILLL.............................................",
+   "............KLLLPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPLLLL................................................",
+   "............KLLLQQQQQQQQQQQQQQQQQQQQQQQQLLLLLLLLLLLLLLLQQQQQQQQQQQQQQQQQQQLLLLL....................................................",
+   "............KLLLQQQQQQQQQQQQQQQQQQQQIILLYYYYYYYYYYYYYYYLLLLLLLLQQQQQQQLLLL.........................................................",
+   "............KLLLPPPPPPPPPPPPPPPPPPIILLYYbbZZZZZZZZZZZZZYYYYYYYYLLLLLLJ.............................................................",
+   "............KLLLPPPPPPPPPPPPPPPPIILLYYbblllllllllllllllZZZZZZZZYYYYYYLYY...........................................................",
+   "............KLLLPPPPPPPPPPPPPPIILLYYbbkkkkkkkkkkkkkkkkkkkkkkkkkZZZZZZYYYYY.........................................................",
+   "............KLLLQQQQQQQQQQQQIIILYYbbkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkZkkYYYY.......................................................",
+   "............KLLLQQQQQQQQQQQIIILYbbbjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjYYYY......................................................",
+   "............KLLLPPPPPPPPPPIIILYbbbkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkYYYY....................................................",
+   "............KLLLPPPPPPPPPIIILYbbbjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjYYYY...................................................",
+   "............KLLLPPPPPPPPIIILYbbbjjbbjjjbbbbjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjYYYY.................................................",
+   "............KLLLPPPPPPPIIIJYbjjjbbIIbbb....bbbbjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjYYYY................................................",
+   "............KLLLPPPPPPPIIIJajjYbIIJJIII........bbbbjjjjjjjjjjjjjjjjjjjjjjjjjjjjjYYYY...............................................",
+   "............KLLLOOOOOOOIIIJajjbILJOOIIJ..........bbbbjjjjjjjjjjjjjjjjjjjjjjjjjjjjYYYY..............................................",
+   "............KLLLOOOOOOOIILLaibILLOOOIIJ............bbbbiiiiiiiiiiiiiiiiiiiiiiiiiiiYYYY.............................................",
+   "............KLLLPPPPPIIIJYYjbILLPPPPIIJ...............bbbbjjjjjjjjjjjjjjjjjjjjjjjjjYYYY............................................",
+   "............KLLLPPPPPIIIJaZbILLPPPPIIIJ................bbbbiiiiiiiiiiiiiiiiiiiiiiiiiYYYY...........................................",
+   "............KLLLOOOOOIIIJbIILLOOOOOIIIJ.................bbbbjjjjjjjjjjjjjjjjjjjjjjjjjYYYY..........................................",
+   "............KLLLOOOOOOOOOIJJOOOOOOOIIIJ..................bbbbiiiiiiiiiiiiiiiiiiiiiiiiYYYZ..........................................",
+   "............KLLLOOOOOOOOOJOOOOOOOOOIIIJ...................bbbbiiiiiiiiiiiiiiiiiiiiiiiiYYYY.........................................",
+   "............KLLLPPPPPPPPPPPPPPPPPPPIIIJ....................bbbbiiiiiiiiiiiiiiiiiiiiiiiiYYYY........................................",
+   "............KLLLPPPPPPPPPPPPPPPPPPPIIIJ.....................bbbbiiiiiiiiiiiiiiiiiiiiiiiiYYYY.......................................",
+   "............KLLLOOOOOOOOOOOOOOOOOOOIIIJ......................abbbhhhhhhhhhhhhhhhhhhhhhhhhYYYY......................................",
+   "............KLLLOOOOOOOOOOOOOOOOOOOIIIJ......................bbbbhhhhhhhhhhhhhhhhhhhhhhhhYYYZ......................................",
+   "............KLLLOOOOOOOOOOOOOOOOOOOIIIJ.......................bbbbiiiiiiiiiiiiiiiiiiiiiiiiYYYY.....................................",
+   "............KLLLOOOOOOOOOOOOOOOOOOOIIIJ........................bbbbhhhhhhhhhhhhhhhhhhhhhhhhYYYY....................................",
+   "............KLLLOOOOOOOOOOOOOOOOOOOIIIJ.........................bbbbhhhhhhhhhhhhhhhhhhhhhhhYYYZ....................................",
+   "............KLLLNNNNNNNNNNNNNNNNNNNIIIJ..........................abbbgggggggggggggggggggggggYYYY...................................",
+   "............KLLLNNNNNNNNNNNNNNNNNNNIIIJ..........................abbbhhhhhhhhhhhhhhhhhhhhhhhhYYYY..................................",
+   "............KLLLOOOOOOOOOOOOOOOOOOOIIIJ..........................bbbbggggggggggggggggggggggggYYYZ..................................",
+   "............KLLLNNNNNNNNNNNNNNNNNNNIIIJ...........................abbbggggggggggggggggggggggggYYYY.................................",
+   "............KLLLNNNNNNNNNNNNNNNNNNNIIIJ...........................bbbbhhhhhhhhhhhhhhhhhhhhhhhhYYYZ.................................",
+   "............KLLLNNNNNNNNNNNNNNNNNNNIIIJ............................abbbggggggggggggggggggggggggYYYY................................",
+   "............KLLLNNNNNNNNNNNNNNNNNNNIIIJ............................bbbbgggggggggggggggggggggggggYYYY...............................",
+   "............KLLLOOOOOOOOOOOOOOOOOOOIIIJ.............................abbbffffffffffffffffffffffffYYYZ...............................",
+   "............KLLLOOOOOOOOOOOOOOOOOOOIIIJ.............................bbbbgggggggggggggggggggggggggYYYY..............................",
+   "............KLLLNNNNNNNNNNNNNNNNNNNIIIJ..............................abbbffffffffffffffffffffffffYYYZ..............................",
+   "............KLLLNNNNNNNNNNNNNNNNNNNIIIJ..............................bbbbfffffffffffffffffffffffffYYYY.............................",
+   "............KLLLNNNNNNNNNNNNNNNNNNNIIIJ...............................abbbffffffffffffffffffffffffYYYZ.............................",
+   "............KLLLNNNNNNNNNNNNNNNNNNNIIIJ...............................abbbfffffffffffffffffffffffffYYYY............................",
+   "............KLLLNNNNNNNNNNNNNNNNNNNIIIJ...............................bbbbffffffffffffffffffffffffffYYYY...........................",
+   "............KLLLMMMMMMMMMMMMMMMMMMMIIIJ................................abbbeeeeeeeeeeeeeeeeeeeeeeeeeYYYZ...........................",
+   "............KLLLNNNNNNNNNNNNNNNNNNNIIIJ................................bbbbffffffffffffffffffffffffffYYYY..........................",
+   "............KLLLNNNNNNNNNNNNNNNNNNNIIIJ.................................abbbeeeeeeeeeeeeeeeeeeeeeeeeeYYYZ..........................",
+   "............KLLLMMMMMMMMMMMMMMMMMMMIIIJ.................................bbbbffffffffffffffffffffffffffYYYY.........................",
+   "............KLLLMMMMMMMMMMMMMMMMMMMIIIJ..................................abbbeeeeeeeeeeeeeeeeeeeeeeeeeeYYYY........................",
+   "............KLLLMMMMMMMMMMMMMMMMMMMIIIJ..................................bbbbeeeeeeeeeeeeeeeeeeeeeeeeeeYYYZ........................",
+   "............KLLLMMMMMMMMMMMMMMMMMMMIIIJ...................................abbbeeeeeeeeeeeeeeeeeeeeeeeeeeYYYY.......................",
+   "............KLLLNNNNNNNNNNNNNNNNNNNIIIJ...................................bbbbddddddddddddddddddddddddddYYYZ.......................",
+   "............KLLLMMMMMMMMMMMMMMMMMMMIIIJ....................................abbbddddddddddddddddddddddddddYYYY......................",
+   "...........ILLLMMMMMMMMMMMMMMMMMMMMIIIJ....................................bbbbdddddddddddddddddddddddddddYYYY.....................",
+   "...........KLLLMMMMMMMMMMMMMMMMMMMMIIIJ.....................................abbbeeeeeeeeeeeeeeeeeeeeeeeeeeYYYZ.....................",
+   "...........KLLLMMMMMMMMMMMMMMMMMMMMIIIJ.....................................bbbbdddddddddddddddddddddddddddYYYY....................",
+   "...........KLLLMMMMMMMMMMMMMMMMMMMMIIIJ......................................abbbdddddddddddddddddddddddddddYYYY...................",
+   "...........KLLLMMMMMMMMMMMMMMMMMMMMIIIJ......................................bbbbccccccccccccccccccccccccccccYYYY..................",
+   "...........KLLLMMMMMMMMMMMMMMMMMMMMIIIJ.......................................bbbbdddddddddddddddddddddddddddYYYZ..................",
+   "...........KLLLMMMMMMMMMMMMMMMMMMMMIIIJ........................................bbbbcccccccccccccccccccccccccccYYYY.................",
+   "...........KLLLMMMMMMMMMMMMMMMMMMMMIIIJ.........................................bbbbcccccccccccccccccccccccccccYYYY................",
+   "...........KLLLMMMMMMMMMMMMMMMMMMMMIIIJ..........................................abbbdddddddddddddddddddddddddddYYYY...............",
+   "...........KLLLMMMMMMMMMMMMMMMMMMMMIIIJ..........................................bbbbccccccccccccccccccccccccccccYYYY..............",
+   "...........KLLLMMMMMMMMMMMMMMMMMMMMIIIJ...........................................bbbbcccccccccccccccccccccccccccccYYYY............",
+   "...........KLLLMMMMMMMMMMMMMMMMMMMMIIIJ............................................bbbbccccccccccccccccccccccccccccYYYZ............",
+   "...........KLLLMMMMMMMMMMMMMMMMMMMMIIIJ.............................................bbbbccccccccccccccccccccccccccccYYYY...........",
+   "...........KLLLMMMMMMMMMMMMMMMMMMMMIIIJ..............................................bbbbcccccccccccccccccccccccccccccYYYY.........",
+   "...........KLLLMMMMMMMMMMMMMMMMMMMMIIIJ...............................................bbbbccccccccccccccccccccccccccccccYYYY.......",
+   "...........KLLLMMMMMMMMMMMMMMMMMMMMIIIJ................................................bbbbcccccccccccccccccccccccccccccYYYZ.......",
+   "...........KLLLMMMMMMMMMMMMMMMMMMMMIIIJ..................................................bbbbcccccccccccccccccccccccccccYYYZ.......",
+   "...........LLLLLLLLLLLLLLLLLLLLLLLLLLLL.....................................................bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.......",
+   "...................................................................................................................................",
+   "...................................................................................................................................",
+   "...................................................................................................................................",
+   "...................................................................................................................................",
+   "...................................................................................................................................",
+   "...................................................................................................................................",
+   "...................................................................................................................................",
+   "...................................................................................................................................",
+   "...................................................................................................................................",
+   ".........22222222222222222............2222222222........222222222222....222222222222.......2222222...........22222222222...22222222",
+   ".........24333333333333332...........24333333332.......2433333333332...2433333333332....235EEEEEEE32........243333333332..243333332",
+   ".........25EEEEEEEEEEEEEEE32........25EEEEEEEE32......25EEEEEEEEEE32..25EEEEEEEEEE32...25EEEEEEEEEEE3......25EEEEEEEEE32.25EEEEEE32",
+   "........25EEEEEEEEEEEEEEEED32.......25EEEEEEEE32......25EEEEEEEEEE32.25EEEEEEEEEEE3..24EEEEEEEEEEEEED32....25EEEEEEEEE32.25EEEEEE2.",
+   "........25DDDDDDDDDDDDDDDDD32......25DDDDDDDDD32......25DDDDDDDDDD2..25DDDDDDDDDD32.25DDDDDDDDDDDDDDDD2....25DDDDDDDDD32.25DDDDD32.",
+   "........25DDDDDDDDDDDDDDDDD32.....25DDDDDDDDDD32.....25DDDDDDDDDD32.25DDDDDDDDDDD3224DDDDDDDDDDDDDDDDD32..25DDDDDDDDDD3225DDDDDD3..",
+   ".......25CCCCCC22222225CCCCCC32...25CCCCC5CCCC32.....25CCCCCCCCCC32.25CCCCCCCCCCC3225CCCCCCC22235CCCCCC2..25CCCCCCCCCC3225CCCCCC2..",
+   ".......25CCCCC32....25CCCCCC32...25CCCCC45CCCC32.....25CCCCCCCCCC3.25CCCCCCCCCCC32.5CCCCCC22....35CCCCC3..25CCCCCCCCCC3225CCCCC3...",
+   "......25BBBBBB2....25BBBBBB32...25BBBBB425BBBB32....25BBBBB5BBBBB3.25BBBB5BBBBBB3.25BBBBB2......25BBBBB3.25BBBBBB5BBBB325BBBBBB3...",
+   "......25BBBBB322222225BBBBB32...25BBBBB325BBBB32....25BBBB45BBBBB225BBBB45BBBBB3225BBBBB2.......25BBBBB3.25BBBBB45BBBB325BBBBB32...",
+   "......25AAAAAAAAAAAAAAAAA32....25AAAAA3.25AAAA32....25AAAA45AAAA3.5AAAAA45AAAAA3225AAAAA2.......25AAAAA325AAAAAA35AAAA325AAAAA3....",
+   ".....25AAAAAAAAAAAAA32........25AAAAA3..25AAAA32...25AAAAA35AAAA325AAAA35AAAAAA325AAAAA2........25AAAAA325AAAAA325AAAA35AAAAAA2....",
+   ".....2599999999999A32.........25999992..25999932...2599993259999359999935999993225999992........259999922599999325999935999993.....",
+   "....2599999999999932.........25999993...25999932...259999325999935999935999999322599993.........599999425999993225999935999993.....",
+   "....259999935999993..........2599999222225999932..2599999325999959999935999993225999992........2599999325999993.25999959999992.....",
+   "....2588888358888882........25888888888888888832..25888832258888588883.5888883225888882........5888884225888882.2588885888883......",
+   "...25888883225888883........58888888888888888832.25888883225888888883258888882.25888882.......25888883.58888832.2588885888882......",
+   "...25888882.258888832......258888888888888888832.25888882.25888888883.58888832.25888882......25888884225888883..2588888888832......",
+   "..258888882.258888882......588888888888888888832.25888832.2588888883.25888883..25888883.....254888884.58888882..258888888882.......",
+   "..257777732..257777732....2577773555555557777732257777732.2577777732.57777732..257777773223547777774225777773...257777777732.......",
+   "..25777772...257777732...2577777322222225777773225777772..257777773.257777732..254777777777777777774.25777772...25777777773........",
+   ".257777732....577777732..57777732......25777773225777732..257777732.25777772....2577777777777777774.257777772...25777777772........",
+   ".25666663.....256666632.25666662.......25666663256666632..25666632.256666632....254666666666666664..25666663....2566666663.........",
+   "256666662.....256666663256666632.......2566666325666662...25666632.25666663......2544666666666645..256666662....2566666663.........",
+   "254444442......4444444325444442........2544444325444442...2544442..25444442.......25544444444552...254444442....25444444422........",
+   "25555555.......2555555525555552........2555555525555552...2555552..25555552........22555555522.....25555555.....255555555..........",
+   "22222222........22222222222222.........222222222222222....222222...22222222..........2222222.......2222222......222222222.........."
+  ]
+ },
+ "feixe": "o o p p q r t v t r q q p o / /",
+ "faiscas": [
+  [
+   "................",
+   "................",
+   "...r............",
+   "....t........rr.",
+   ".....v..r..rut..",
+   "rrrrrrwtrttvv...",
+   "tttuuvwxwwxw....",
+   "vvwwwyyyyyxt....",
+   "tuvwxyyyyywrr...",
+   "rstwxxyyyywt....",
+   ".rrsrwwwwxxt....",
+   "....urttrtwv....",
+   "...t....r..uu...",
+   "..r.........tr..",
+   ".............r..",
+   "................"
+  ],
+  [
+   "..........rr....",
+   "..........tt....",
+   ".......r.rur....",
+   "rr....rttwvr....",
+   "ttrr.rtwwxr.....",
+   "sttvutwyyytr....",
+   "ttuwxyyyyywtr...",
+   "vuvwwxyyyyywtr..",
+   "tttttwyyyyyxwr..",
+   "rsssrtyyywtrvutr",
+   ".rrrrrxwwtr.rrtr",
+   "....rvwttr......",
+   "....rur.r.......",
+   "....tt..........",
+   "....rr..........",
+   "................"
+  ],
+  [
+   "........r.......",
+   "........t.......",
+   "........u.......",
+   ".......rv.......",
+   "......rtwr......",
+   "rrrssstwxtr.....",
+   "ttttuvwyywtr....",
+   "wwwxxyyyyywtr...",
+   "tttuxxyyyyxwvutr",
+   "rrrsstwyywtr....",
+   "...rrrtxwtr.....",
+   "......rwtr......",
+   ".......vr.......",
+   ".......u........",
+   ".......t........",
+   ".......r........"
+  ],
+  [
+   "....rr..........",
+   "....tt..........",
+   "....rur.r.......",
+   "....rvwttr......",
+   ".....rxwwtr.rrtr",
+   "rsssuwyyywtrvutr",
+   "ttuvwyyyyyyxwr..",
+   "vvvwyyyyyyywt...",
+   "ttuvxyyyyywtr...",
+   "rrsuvvwyyytr....",
+   "..rrrrtwwxr.....",
+   "......rttwvr....",
+   ".......r.rur....",
+   "..........tt....",
+   "..........rr....",
+   "................"
+  ]
+ ],
+ "paletas": [
+  {
+   "q": 0,
+   "cores": "0000 0000 3000 4400 5800 7c00 0000 0000 0000 0000 0000 0000 0000 0020 0000 0000 0000 0000 3000 4400 5800 7c00 0000 0000 0000 0000 0000 0000 0000 0020 0000 0000 0000 0000 3000 4400 5800 7c00 0000 0000 0000 0000 0000 0000 0000 0020 0000 0000 0420 0001 0001 0001 0001 2008 2c4d 38b2 557c 59dc 623c 6abd 7b9e 0001 0001 0001"
+  },
+  {
+   "q": 34,
+   "cores": "0000 0000 3000 4400 5800 7c00 0000 0000 0000 0000 0000 0000 0000 0020 0000 0000 0000 0000 3000 4400 5800 7c00 0000 0000 0000 0000 0000 0000 0000 0020 0000 0000 0000 0000 3000 4400 5800 7c00 0000 0000 0000 0000 0000 0000 0000 0020 0000 0000 0420 0001 0001 0001 2008 2c4d 38b2 557c 59dc 623c 6abd 7b9e 0001 0001 0001 0001"
+  },
+  {
+   "q": 38,
+   "cores": "0000 0000 3000 4400 5800 7c00 0000 0000 0000 0000 0000 0000 0000 0020 0000 0000 0000 0000 3000 4400 5800 7c00 0000 0000 0000 0000 0000 0000 0000 0020 0000 0000 0000 0000 3000 4400 5800 7c00 0000 0000 0000 0000 0000 0000 0000 0020 0000 0000 0420 0001 0001 2008 2c4d 38b2 557c 59dc 623c 6abd 7b9e 0001 0001 0001 0001 0001"
+  },
+  {
+   "q": 42,
+   "cores": "0000 0000 3000 4400 5800 7c00 0000 0000 0000 0000 0000 0000 0000 0020 0000 0000 0000 0000 3000 4400 5800 7c00 0000 0000 0000 0000 0000 0000 0000 0020 0000 0000 0000 0000 3000 4400 5800 7c00 0000 0000 0000 0000 0000 0000 0000 0020 0000 0000 0420 0001 2008 2c4d 38b2 557c 59dc 623c 6abd 7b9e 0001 0001 0001 0001 0001 0001"
+  },
+  {
+   "q": 174,
+   "cores": "0000 0000 3000 4400 5800 7c00 0000 0000 0000 0000 0000 0000 0000 0020 0000 0000 7fff 0000 027e 023b 01f9 0575 039f 035e 031d 02dc 029b 027a 023a 01f9 01b8 0156 0000 0000 3000 4400 5800 7c00 0000 0000 0000 0000 0000 0000 0000 0020 0000 0000 0420 0001 2008 2c4d 38b2 557c 59dc 623c 6abd 7b9e 0001 0001 0001 0001 0001 0001"
+  },
+  {
+   "q": 175,
+   "cores": "0000 0000 3000 4400 5800 7c00 0000 0000 0000 0000 0000 0000 0000 0020 0000 0000 7fff 0000 027e 023b 01f9 0575 035e 031d 02dc 029b 027a 023a 01f9 01b8 0156 039f 7fff 0000 01be 015b 0118 0492 021f 019e 011d 001b 0019 0017 0015 0413 0411 082e 0420 0001 2008 2c4d 38b2 557c 59dc 623c 6abd 7b9e 0001 0001 0001 0001 0001 0001"
+  },
+  {
+   "q": 176,
+   "cores": "0000 0000 3000 4400 5800 7c00 0000 0000 0000 0000 0000 0000 0000 0020 0000 0000 7fff 0000 027e 023b 01f9 0575 031d 02dc 029b 027a 023a 01f9 01b8 0156 039f 035e 7fff 0000 01be 015b 0118 0492 019e 011d 001b 0019 0017 0015 0413 0411 082e 021f 0420 0001 2008 2c4d 38b2 557c 59dc 623c 6abd 7b9e 0001 0001 0001 0001 0001 0001"
+  },
+  {
+   "q": 177,
+   "cores": "0000 0000 3000 4400 5800 7c00 0000 0000 0000 0000 0000 0000 0000 0020 0000 0000 7fff 0000 027e 023b 01f9 0575 02dc 029b 027a 023a 01f9 01b8 0156 039f 035e 031d 7fff 0000 01be 015b 0118 0492 011d 001b 0019 0017 0015 0413 0411 082e 021f 019e 0420 0001 2008 2c4d 38b2 557c 59dc 623c 6abd 7b9e 0001 0001 0001 0001 0001 0001"
+  },
+  {
+   "q": 178,
+   "cores": "0000 0000 3000 4400 5800 7c00 0000 0000 0000 0000 0000 0000 0000 0020 0000 0000 7fff 0000 027e 023b 01f9 0575 029b 027a 023a 01f9 01b8 0156 039f 035e 031d 02dc 7fff 0000 01be 015b 0118 0492 001b 0019 0017 0015 0413 0411 082e 021f 019e 011d 0420 0001 2008 2c4d 38b2 557c 59dc 623c 6abd 7b9e 0001 0001 0001 0001 0001 0001"
+  },
+  {
+   "q": 179,
+   "cores": "0000 0000 3000 4400 5800 7c00 0000 0000 0000 0000 0000 0000 0000 0020 0000 0000 7fff 0000 027e 023b 01f9 0575 027a 023a 01f9 01b8 0156 039f 035e 031d 02dc 029b 7fff 0000 01be 015b 0118 0492 0019 0017 0015 0413 0411 082e 021f 019e 011d 001b 0420 0001 2008 2c4d 38b2 557c 59dc 623c 6abd 7b9e 0001 0001 0001 0001 0001 0001"
+  },
+  {
+   "q": 180,
+   "cores": "0000 0000 3000 4400 5800 7c00 0000 0000 0000 0000 0000 0000 0000 0020 0000 0000 7fff 0000 027e 023b 01f9 0575 023a 01f9 01b8 0156 039f 035e 031d 02dc 029b 027a 7fff 0000 01be 015b 0118 0492 0017 0015 0413 0411 082e 021f 019e 011d 001b 0019 0420 0001 2008 2c4d 38b2 557c 59dc 623c 6abd 7b9e 0001 0001 0001 0001 0001 0001"
+  },
+  {
+   "q": 181,
+   "cores": "0000 0000 3000 4400 5800 7c00 0000 0000 0000 0000 0000 0000 0000 0020 0000 0000 7fff 0000 027e 023b 01f9 0575 01f9 01b8 0156 039f 035e 031d 02dc 029b 027a 023a 7fff 0000 01be 015b 0118 0492 0015 0413 0411 082e 021f 019e 011d 001b 0019 0017 0420 0001 2008 2c4d 38b2 557c 59dc 623c 6abd 7b9e 0001 0001 0001 0001 0001 0001"
+  },
+  {
+   "q": 182,
+   "cores": "0000 0000 3000 4400 5800 7c00 0000 0000 0000 0000 0000 0000 0000 0020 0000 0000 7fff 0000 027e 023b 01f9 0575 01b8 0156 039f 035e 031d 02dc 029b 027a 023a 01f9 7fff 0000 01be 015b 0118 0492 0413 0411 082e 021f 019e 011d 001b 0019 0017 0015 0420 0001 2008 2c4d 38b2 557c 59dc 623c 6abd 7b9e 0001 0001 0001 0001 0001 0001"
+  },
+  {
+   "q": 183,
+   "cores": "0000 0000 3000 4400 5800 7c00 0000 0000 0000 0000 0000 0000 0000 0020 0000 0000 7fff 0000 027e 023b 01f9 0575 0156 039f 035e 031d 02dc 029b 027a 023a 01f9 01b8 7fff 0000 01be 015b 0118 0492 0411 082e 021f 019e 011d 001b 0019 0017 0015 0413 0420 0001 2008 2c4d 38b2 557c 59dc 623c 6abd 7b9e 0001 0001 0001 0001 0001 0001"
+  },
+  {
+   "q": 184,
+   "cores": "0000 0000 3000 4400 5800 7c00 0000 0000 0000 0000 0000 0000 0000 0020 0000 0000 7fff 0000 027e 023b 01f9 0575 039f 035e 031d 02dc 029b 027a 023a 01f9 01b8 0156 7fff 0000 01be 015b 0118 0492 082e 021f 019e 011d 001b 0019 0017 0015 0413 0411 0420 0001 2008 2c4d 38b2 557c 59dc 623c 6abd 7b9e 0001 0001 0001 0001 0001 0001"
+  },
+  {
+   "q": 185,
+   "cores": "0000 0000 3000 4400 5800 7c00 0000 0000 0000 0000 0000 0000 0000 0020 0000 0000 7fff 0000 027e 023b 01f9 0575 039f 035e 031d 02dc 029b 027a 023a 01f9 01b8 0156 7fff 0000 01be 015b 0118 0492 021f 019e 011d 001b 0019 0017 0015 0413 0411 082e 0420 0001 2008 2c4d 38b2 557c 59dc 623c 6abd 7b9e 0001 0001 0001 0001 0001 0001"
+  },
+  {
+   "q": 188,
+   "cores": "0000 0000 6f7b 56b5 4210 14a5 66d6 5e94 5652 4e10 49ef 41ad 396b 354a 2d08 20a5 7fff 0000 027e 023b 01f9 0575 039f 035e 031d 02dc 029b 027a 023a 01f9 01b8 0156 7fff 0000 01be 015b 0118 0492 021f 019e 011d 001b 0019 0017 0015 0413 0411 082e 0420 0001 2008 2c4d 38b2 557c 59dc 623c 6abd 7b9e 0001 0001 0001 0001 0001 0001"
+  },
+  {
+   "q": 190,
+   "cores": "0000 0000 6f7b 56b5 4210 66d6 5e94 5652 4e10 49ef 41ad 396b 354a 2d08 20a5 14a5 7fff 0000 027e 023b 01f9 0575 039f 035e 031d 02dc 029b 027a 023a 01f9 01b8 0156 7fff 0000 01be 015b 0118 0492 021f 019e 011d 001b 0019 0017 0015 0413 0411 082e 0420 0001 2008 2c4d 38b2 557c 59dc 623c 6abd 7b9e 0001 0001 0001 0001 0001 0001"
+  },
+  {
+   "q": 192,
+   "cores": "0000 0000 6f7b 56b5 4210 5e94 5652 4e10 49ef 41ad 396b 354a 2d08 20a5 14a5 66d6 7fff 0000 027e 023b 01f9 0575 039f 035e 031d 02dc 029b 027a 023a 01f9 01b8 0156 7fff 0000 01be 015b 0118 0492 021f 019e 011d 001b 0019 0017 0015 0413 0411 082e 0420 0001 2008 2c4d 38b2 557c 59dc 623c 6abd 7b9e 0001 0001 0001 0001 0001 0001"
+  },
+  {
+   "q": 194,
+   "cores": "0000 0000 6f7b 56b5 4210 5652 4e10 49ef 41ad 396b 354a 2d08 20a5 14a5 66d6 5e94 7fff 0000 027e 023b 01f9 0575 039f 035e 031d 02dc 029b 027a 023a 01f9 01b8 0156 7fff 0000 01be 015b 0118 0492 021f 019e 011d 001b 0019 0017 0015 0413 0411 082e 0420 0001 2008 2c4d 38b2 557c 59dc 623c 6abd 7b9e 0001 0001 0001 0001 0001 0001"
+  },
+  {
+   "q": 196,
+   "cores": "0000 0000 6f7b 56b5 4210 4e10 49ef 41ad 396b 354a 2d08 20a5 14a5 66d6 5e94 5652 7fff 0000 027e 023b 01f9 0575 039f 035e 031d 02dc 029b 027a 023a 01f9 01b8 0156 7fff 0000 01be 015b 0118 0492 021f 019e 011d 001b 0019 0017 0015 0413 0411 082e 0420 0001 2008 2c4d 38b2 557c 59dc 623c 6abd 7b9e 0001 0001 0001 0001 0001 0001"
+  },
+  {
+   "q": 198,
+   "cores": "0000 0000 6f7b 56b5 4210 49ef 41ad 396b 354a 2d08 20a5 14a5 66d6 5e94 5652 4e10 7fff 0000 027e 023b 01f9 0575 039f 035e 031d 02dc 029b 027a 023a 01f9 01b8 0156 7fff 0000 01be 015b 0118 0492 021f 019e 011d 001b 0019 0017 0015 0413 0411 082e 0420 0001 2008 2c4d 38b2 557c 59dc 623c 6abd 7b9e 0001 0001 0001 0001 0001 0001"
+  },
+  {
+   "q": 200,
+   "cores": "0000 0000 6f7b 56b5 4210 41ad 396b 354a 2d08 20a5 14a5 66d6 5e94 5652 4e10 49ef 7fff 0000 027e 023b 01f9 0575 039f 035e 031d 02dc 029b 027a 023a 01f9 01b8 0156 7fff 0000 01be 015b 0118 0492 021f 019e 011d 001b 0019 0017 0015 0413 0411 082e 0420 0001 2008 2c4d 38b2 557c 59dc 623c 6abd 7b9e 0001 0001 0001 0001 0001 0001"
+  },
+  {
+   "q": 202,
+   "cores": "0000 0000 6f7b 56b5 4210 396b 354a 2d08 20a5 14a5 66d6 5e94 5652 4e10 49ef 41ad 7fff 0000 027e 023b 01f9 0575 039f 035e 031d 02dc 029b 027a 023a 01f9 01b8 0156 7fff 0000 01be 015b 0118 0492 021f 019e 011d 001b 0019 0017 0015 0413 0411 082e 0420 0001 2008 2c4d 38b2 557c 59dc 623c 6abd 7b9e 0001 0001 0001 0001 0001 0001"
+  },
+  {
+   "q": 204,
+   "cores": "0000 0000 6f7b 56b5 4210 354a 2d08 20a5 14a5 66d6 5e94 5652 4e10 49ef 41ad 396b 7fff 0000 027e 023b 01f9 0575 039f 035e 031d 02dc 029b 027a 023a 01f9 01b8 0156 7fff 0000 01be 015b 0118 0492 021f 019e 011d 001b 0019 0017 0015 0413 0411 082e 0420 0001 2008 2c4d 38b2 557c 59dc 623c 6abd 7b9e 0001 0001 0001 0001 0001 0001"
+  },
+  {
+   "q": 206,
+   "cores": "0000 0000 6f7b 56b5 4210 2d08 20a5 14a5 66d6 5e94 5652 4e10 49ef 41ad 396b 354a 7fff 0000 027e 023b 01f9 0575 039f 035e 031d 02dc 029b 027a 023a 01f9 01b8 0156 7fff 0000 01be 015b 0118 0492 021f 019e 011d 001b 0019 0017 0015 0413 0411 082e 0420 0001 2008 2c4d 38b2 557c 59dc 623c 6abd 7b9e 0001 0001 0001 0001 0001 0001"
+  },
+  {
+   "q": 208,
+   "cores": "0000 0000 6f7b 56b5 4210 20a5 14a5 66d6 5e94 5652 4e10 49ef 41ad 396b 354a 2d08 7fff 0000 027e 023b 01f9 0575 039f 035e 031d 02dc 029b 027a 023a 01f9 01b8 0156 7fff 0000 01be 015b 0118 0492 021f 019e 011d 001b 0019 0017 0015 0413 0411 082e 0420 0001 2008 2c4d 38b2 557c 59dc 623c 6abd 7b9e 0001 0001 0001 0001 0001 0001"
+  },
+  {
+   "q": 210,
+   "cores": "0000 0000 6f7b 56b5 4210 14a5 66d6 5e94 5652 4e10 49ef 41ad 396b 354a 2d08 20a5 7fff 0000 027e 023b 01f9 0575 039f 035e 031d 02dc 029b 027a 023a 01f9 01b8 0156 7fff 0000 01be 015b 0118 0492 021f 019e 011d 001b 0019 0017 0015 0413 0411 082e 0420 0001 2008 2c4d 38b2 557c 59dc 623c 6abd 7b9e 0001 0001 0001 0001 0001 0001"
+  },
+  {
+   "q": 214,
+   "cores": "0421 0421 6f7b 56b5 4210 14a5 66d6 5e94 5652 4e10 49ef 41ad 396b 354a 2d08 20a5 7fff 0000 027e 023b 01f9 0575 039f 035e 031d 02dc 029b 027a 023a 01f9 01b8 0156 7fff 0000 01be 015b 0118 0492 021f 019e 011d 001b 0019 0017 0015 0413 0411 082e 0420 0001 2008 2c4d 38b2 557c 59dc 623c 6abd 7b9e 0001 0001 0001 0001 0001 0001"
+  },
+  {
+   "q": 215,
+   "cores": "0842 0842 6f7b 56b5 4210 14a5 66d6 5e94 5652 4e10 49ef 41ad 396b 354a 2d08 20a5 7fff 0000 027e 023b 01f9 0575 039f 035e 031d 02dc 029b 027a 023a 01f9 01b8 0156 7fff 0000 01be 015b 0118 0492 021f 019e 011d 001b 0019 0017 0015 0413 0411 082e 0420 0001 2008 2c4d 38b2 557c 59dc 623c 6abd 7b9e 0001 0001 0001 0001 0001 0001"
+  },
+  {
+   "q": 216,
+   "cores": "0c63 0c63 6f7b 56b5 4210 14a5 66d6 5e94 5652 4e10 49ef 41ad 396b 354a 2d08 20a5 7fff 0000 027e 023b 01f9 0575 039f 035e 031d 02dc 029b 027a 023a 01f9 01b8 0156 7fff 0000 01be 015b 0118 0492 021f 019e 011d 001b 0019 0017 0015 0413 0411 082e 0420 0001 2008 2c4d 38b2 557c 59dc 623c 6abd 7b9e 0001 0001 0001 0001 0001 0001"
+  },
+  {
+   "q": 217,
+   "cores": "1084 1084 6f7b 56b5 4210 14a5 66d6 5e94 5652 4e10 49ef 41ad 396b 354a 2d08 20a5 7fff 0000 027e 023b 01f9 0575 039f 035e 031d 02dc 029b 027a 023a 01f9 01b8 0156 7fff 0000 01be 015b 0118 0492 021f 019e 011d 001b 0019 0017 0015 0413 0411 082e 0420 0001 2008 2c4d 38b2 557c 59dc 623c 6abd 7b9e 0001 0001 0001 0001 0001 0001"
+  },
+  {
+   "q": 218,
+   "cores": "14a5 14a5 6f7b 56b5 4210 14a5 66d6 5e94 5652 4e10 49ef 41ad 396b 354a 2d08 20a5 7fff 0000 027e 023b 01f9 0575 039f 035e 031d 02dc 029b 027a 023a 01f9 01b8 0156 7fff 0000 01be 015b 0118 0492 021f 019e 011d 001b 0019 0017 0015 0413 0411 082e 0420 0001 2008 2c4d 38b2 557c 59dc 623c 6abd 7b9e 0001 0001 0001 0001 0001 0001"
+  },
+  {
+   "q": 219,
+   "cores": "18c6 18c6 6f7b 56b5 4210 14a5 66d6 5e94 5652 4e10 49ef 41ad 396b 354a 2d08 20a5 7fff 0000 027e 023b 01f9 0575 039f 035e 031d 02dc 029b 027a 023a 01f9 01b8 0156 7fff 0000 01be 015b 0118 0492 021f 019e 011d 001b 0019 0017 0015 0413 0411 082e 0420 0001 2008 2c4d 38b2 557c 59dc 623c 6abd 7b9e 0001 0001 0001 0001 0001 0001"
+  },
+  {
+   "q": 220,
+   "cores": "1ce7 1ce7 6f7b 56b5 4210 14a5 66d6 5e94 5652 4e10 49ef 41ad 396b 354a 2d08 20a5 7fff 0000 027e 023b 01f9 0575 039f 035e 031d 02dc 029b 027a 023a 01f9 01b8 0156 7fff 0000 01be 015b 0118 0492 021f 019e 011d 001b 0019 0017 0015 0413 0411 082e 0420 0001 2008 2c4d 38b2 557c 59dc 623c 6abd 7b9e 0001 0001 0001 0001 0001 0001"
+  },
+  {
+   "q": 221,
+   "cores": "2108 2108 6f7b 56b5 4210 14a5 66d6 5e94 5652 4e10 49ef 41ad 396b 354a 2d08 20a5 7fff 0000 027e 023b 01f9 0575 039f 035e 031d 02dc 029b 027a 023a 01f9 01b8 0156 7fff 0000 01be 015b 0118 0492 021f 019e 011d 001b 0019 0017 0015 0413 0411 082e 0420 0001 2008 2c4d 38b2 557c 59dc 623c 6abd 7b9e 0001 0001 0001 0001 0001 0001"
+  },
+  {
+   "q": 222,
+   "cores": "2529 2529 6f7b 56b5 4210 14a5 66d6 5e94 5652 4e10 49ef 41ad 396b 354a 2d08 20a5 7fff 0000 027e 023b 01f9 0575 039f 035e 031d 02dc 029b 027a 023a 01f9 01b8 0156 7fff 0000 01be 015b 0118 0492 021f 019e 011d 001b 0019 0017 0015 0413 0411 082e 0420 0001 2008 2c4d 38b2 557c 59dc 623c 6abd 7b9e 0001 0001 0001 0001 0001 0001"
+  },
+  {
+   "q": 223,
+   "cores": "294a 294a 6f7b 56b5 4210 14a5 66d6 5e94 5652 4e10 49ef 41ad 396b 354a 2d08 20a5 7fff 0000 027e 023b 01f9 0575 039f 035e 031d 02dc 029b 027a 023a 01f9 01b8 0156 7fff 0000 01be 015b 0118 0492 021f 019e 011d 001b 0019 0017 0015 0413 0411 082e 0420 0001 2008 2c4d 38b2 557c 59dc 623c 6abd 7b9e 0001 0001 0001 0001 0001 0001"
+  },
+  {
+   "q": 224,
+   "cores": "2d6b 2d6b 6f7b 56b5 4210 14a5 66d6 5e94 5652 4e10 49ef 41ad 396b 354a 2d08 20a5 7fff 0000 027e 023b 01f9 0575 039f 035e 031d 02dc 029b 027a 023a 01f9 01b8 0156 7fff 0000 01be 015b 0118 0492 021f 019e 011d 001b 0019 0017 0015 0413 0411 082e 0420 0001 2008 2c4d 38b2 557c 59dc 623c 6abd 7b9e 0001 0001 0001 0001 0001 0001"
+  },
+  {
+   "q": 225,
+   "cores": "318c 318c 6f7b 56b5 4210 14a5 66d6 5e94 5652 4e10 49ef 41ad 396b 354a 2d08 20a5 7fff 0000 027e 023b 01f9 0575 039f 035e 031d 02dc 029b 027a 023a 01f9 01b8 0156 7fff 0000 01be 015b 0118 0492 021f 019e 011d 001b 0019 0017 0015 0413 0411 082e 0420 0001 2008 2c4d 38b2 557c 59dc 623c 6abd 7b9e 0001 0001 0001 0001 0001 0001"
+  },
+  {
+   "q": 226,
+   "cores": "35ad 35ad 6f7b 56b5 4210 14a5 66d6 5e94 5652 4e10 49ef 41ad 396b 354a 2d08 20a5 7fff 0000 027e 023b 01f9 0575 039f 035e 031d 02dc 029b 027a 023a 01f9 01b8 0156 7fff 0000 01be 015b 0118 0492 021f 019e 011d 001b 0019 0017 0015 0413 0411 082e 0420 0001 2008 2c4d 38b2 557c 59dc 623c 6abd 7b9e 0001 0001 0001 0001 0001 0001"
+  },
+  {
+   "q": 227,
+   "cores": "39ce 39ce 6f7b 56b5 4210 14a5 66d6 5e94 5652 4e10 49ef 41ad 396b 354a 2d08 20a5 7fff 0000 027e 023b 01f9 0575 039f 035e 031d 02dc 029b 027a 023a 01f9 01b8 0156 7fff 0000 01be 015b 0118 0492 021f 019e 011d 001b 0019 0017 0015 0413 0411 082e 0420 0001 2008 2c4d 38b2 557c 59dc 623c 6abd 7b9e 0001 0001 0001 0001 0001 0001"
+  },
+  {
+   "q": 228,
+   "cores": "3def 3def 6f7b 56b5 4210 14a5 66d6 5e94 5652 4e10 49ef 41ad 396b 354a 2d08 20a5 7fff 0000 027e 023b 01f9 0575 039f 035e 031d 02dc 029b 027a 023a 01f9 01b8 0156 7fff 0000 01be 015b 0118 0492 021f 019e 011d 001b 0019 0017 0015 0413 0411 082e 0420 0001 2008 2c4d 38b2 557c 59dc 623c 6abd 7b9e 0001 0001 0001 0001 0001 0001"
+  },
+  {
+   "q": 229,
+   "cores": "4210 4210 6f7b 56b5 4210 14a5 66d6 5e94 5652 4e10 49ef 41ad 396b 354a 2d08 20a5 7fff 0000 027e 023b 01f9 0575 039f 035e 031d 02dc 029b 027a 023a 01f9 01b8 0156 7fff 0000 01be 015b 0118 0492 021f 019e 011d 001b 0019 0017 0015 0413 0411 082e 0420 0001 2008 2c4d 38b2 557c 59dc 623c 6abd 7b9e 0001 0001 0001 0001 0001 0001"
+  },
+  {
+   "q": 230,
+   "cores": "4631 4631 6f7b 56b5 4210 14a5 66d6 5e94 5652 4e10 49ef 41ad 396b 354a 2d08 20a5 7fff 0000 027e 023b 01f9 0575 039f 035e 031d 02dc 029b 027a 023a 01f9 01b8 0156 7fff 0000 01be 015b 0118 0492 021f 019e 011d 001b 0019 0017 0015 0413 0411 082e 0420 0001 2008 2c4d 38b2 557c 59dc 623c 6abd 7b9e 0001 0001 0001 0001 0001 0001"
+  },
+  {
+   "q": 231,
+   "cores": "4a52 4a52 6f7b 56b5 4210 14a5 66d6 5e94 5652 4e10 49ef 41ad 396b 354a 2d08 20a5 7fff 0000 027e 023b 01f9 0575 039f 035e 031d 02dc 029b 027a 023a 01f9 01b8 0156 7fff 0000 01be 015b 0118 0492 021f 019e 011d 001b 0019 0017 0015 0413 0411 082e 0420 0001 2008 2c4d 38b2 557c 59dc 623c 6abd 7b9e 0001 0001 0001 0001 0001 0001"
+  },
+  {
+   "q": 232,
+   "cores": "4e73 4e73 6f7b 56b5 4210 14a5 66d6 5e94 5652 4e10 49ef 41ad 396b 354a 2d08 20a5 7fff 0000 027e 023b 01f9 0575 039f 035e 031d 02dc 029b 027a 023a 01f9 01b8 0156 7fff 0000 01be 015b 0118 0492 021f 019e 011d 001b 0019 0017 0015 0413 0411 082e 0420 0001 2008 2c4d 38b2 557c 59dc 623c 6abd 7b9e 0001 0001 0001 0001 0001 0001"
+  },
+  {
+   "q": 233,
+   "cores": "5294 5294 6f7b 56b5 4210 14a5 66d6 5e94 5652 4e10 49ef 41ad 396b 354a 2d08 20a5 7fff 0000 027e 023b 01f9 0575 039f 035e 031d 02dc 029b 027a 023a 01f9 01b8 0156 7fff 0000 01be 015b 0118 0492 021f 019e 011d 001b 0019 0017 0015 0413 0411 082e 0420 0001 2008 2c4d 38b2 557c 59dc 623c 6abd 7b9e 0001 0001 0001 0001 0001 0001"
+  },
+  {
+   "q": 234,
+   "cores": "56b5 56b5 6f7b 56b5 4210 14a5 66d6 5e94 5652 4e10 49ef 41ad 396b 354a 2d08 20a5 7fff 0000 027e 023b 01f9 0575 039f 035e 031d 02dc 029b 027a 023a 01f9 01b8 0156 7fff 0000 01be 015b 0118 0492 021f 019e 011d 001b 0019 0017 0015 0413 0411 082e 0420 0001 2008 2c4d 38b2 557c 59dc 623c 6abd 7b9e 0001 0001 0001 0001 0001 0001"
+  },
+  {
+   "q": 235,
+   "cores": "5ad6 5ad6 6f7b 56b5 4210 14a5 66d6 5e94 5652 4e10 49ef 41ad 396b 354a 2d08 20a5 7fff 0000 027e 023b 01f9 0575 039f 035e 031d 02dc 029b 027a 023a 01f9 01b8 0156 7fff 0000 01be 015b 0118 0492 021f 019e 011d 001b 0019 0017 0015 0413 0411 082e 0420 0001 2008 2c4d 38b2 557c 59dc 623c 6abd 7b9e 0001 0001 0001 0001 0001 0001"
+  },
+  {
+   "q": 236,
+   "cores": "5ef7 5ef7 6f7b 56b5 4210 14a5 66d6 5e94 5652 4e10 49ef 41ad 396b 354a 2d08 20a5 7fff 0000 027e 023b 01f9 0575 039f 035e 031d 02dc 029b 027a 023a 01f9 01b8 0156 7fff 0000 01be 015b 0118 0492 021f 019e 011d 001b 0019 0017 0015 0413 0411 082e 0420 0001 2008 2c4d 38b2 557c 59dc 623c 6abd 7b9e 0001 0001 0001 0001 0001 0001"
+  },
+  {
+   "q": 237,
+   "cores": "6318 6318 6f7b 56b5 4210 14a5 66d6 5e94 5652 4e10 49ef 41ad 396b 354a 2d08 20a5 7fff 0000 027e 023b 01f9 0575 039f 035e 031d 02dc 029b 027a 023a 01f9 01b8 0156 7fff 0000 01be 015b 0118 0492 021f 019e 011d 001b 0019 0017 0015 0413 0411 082e 0420 0001 2008 2c4d 38b2 557c 59dc 623c 6abd 7b9e 0001 0001 0001 0001 0001 0001"
+  },
+  {
+   "q": 238,
+   "cores": "6739 6739 6f7b 56b5 4210 14a5 66d6 5e94 5652 4e10 49ef 41ad 396b 354a 2d08 20a5 7fff 0000 027e 023b 01f9 0575 039f 035e 031d 02dc 029b 027a 023a 01f9 01b8 0156 7fff 0000 01be 015b 0118 0492 021f 019e 011d 001b 0019 0017 0015 0413 0411 082e 0420 0001 2008 2c4d 38b2 557c 59dc 623c 6abd 7b9e 0001 0001 0001 0001 0001 0001"
+  },
+  {
+   "q": 239,
+   "cores": "6b5a 6b5a 6f7b 56b5 4210 14a5 66d6 5e94 5652 4e10 49ef 41ad 396b 354a 2d08 20a5 7fff 0000 027e 023b 01f9 0575 039f 035e 031d 02dc 029b 027a 023a 01f9 01b8 0156 7fff 0000 01be 015b 0118 0492 021f 019e 011d 001b 0019 0017 0015 0413 0411 082e 0420 0001 2008 2c4d 38b2 557c 59dc 623c 6abd 7b9e 0001 0001 0001 0001 0001 0001"
+  },
+  {
+   "q": 240,
+   "cores": "6f7b 6f7b 6f7b 56b5 4210 14a5 66d6 5e94 5652 4e10 49ef 41ad 396b 354a 2d08 20a5 7fff 0000 027e 023b 01f9 0575 039f 035e 031d 02dc 029b 027a 023a 01f9 01b8 0156 7fff 0000 01be 015b 0118 0492 021f 019e 011d 001b 0019 0017 0015 0413 0411 082e 0420 0001 2008 2c4d 38b2 557c 59dc 623c 6abd 7b9e 0001 0001 0001 0001 0001 0001"
+  },
+  {
+   "q": 241,
+   "cores": "739c 739c 6f7b 56b5 4210 14a5 66d6 5e94 5652 4e10 49ef 41ad 396b 354a 2d08 20a5 7fff 0000 027e 023b 01f9 0575 039f 035e 031d 02dc 029b 027a 023a 01f9 01b8 0156 7fff 0000 01be 015b 0118 0492 021f 019e 011d 001b 0019 0017 0015 0413 0411 082e 0420 0001 2008 2c4d 38b2 557c 59dc 623c 6abd 7b9e 0001 0001 0001 0001 0001 0001"
+  },
+  {
+   "q": 242,
+   "cores": "77bd 77bd 6f7b 56b5 4210 14a5 66d6 5e94 5652 4e10 49ef 41ad 396b 354a 2d08 20a5 7fff 0000 027e 023b 01f9 0575 039f 035e 031d 02dc 029b 027a 023a 01f9 01b8 0156 7fff 0000 01be 015b 0118 0492 021f 019e 011d 001b 0019 0017 0015 0413 0411 082e 0420 0001 2008 2c4d 38b2 557c 59dc 623c 6abd 7b9e 0001 0001 0001 0001 0001 0001"
+  },
+  {
+   "q": 243,
+   "cores": "7bde 7bde 6f7b 56b5 4210 14a5 66d6 5e94 5652 4e10 49ef 41ad 396b 354a 2d08 20a5 7fff 0000 027e 023b 01f9 0575 039f 035e 031d 02dc 029b 027a 023a 01f9 01b8 0156 7fff 0000 01be 015b 0118 0492 021f 019e 011d 001b 0019 0017 0015 0413 0411 082e 0420 0001 2008 2c4d 38b2 557c 59dc 623c 6abd 7b9e 0001 0001 0001 0001 0001 0001"
+  },
+  {
+   "q": 244,
+   "cores": "7fff 7fff 6f7b 56b5 4210 14a5 66d6 5e94 5652 4e10 49ef 41ad 396b 354a 2d08 20a5 7fff 0000 027e 023b 01f9 0575 039f 035e 031d 02dc 029b 027a 023a 01f9 01b8 0156 7fff 0000 01be 015b 0118 0492 021f 019e 011d 001b 0019 0017 0015 0413 0411 082e 0420 0001 2008 2c4d 38b2 557c 59dc 623c 6abd 7b9e 0001 0001 0001 0001 0001 0001"
+  },
+  {
+   "q": 502,
+   "cores": "7bde 7bde 6b5a 5294 3def 1084 62b5 5a73 5231 49ef 45ce 3d8c 354a 3129 28e7 1c84 7bde 0000 025d 021a 01d8 0154 037e 033d 02fc 02bb 027a 0259 0219 01d8 0197 0135 7bde 0000 019d 013a 00f7 0071 01fe 017d 00fc 001a 0018 0016 0014 0012 0010 040d 0000 0000 1c07 282c 3491 515b 55bb 5e1b 669c 777d 0000 0000 0000 0000 0000 0000"
+  },
+  {
+   "q": 503,
+   "cores": "77bd 77bd 6739 4e73 39ce 0c63 5e94 5652 4e10 45ce 41ad 396b 3129 2d08 24c6 1863 77bd 0000 023c 01f9 01b7 0133 035d 031c 02db 029a 0259 0238 01f8 01b7 0176 0114 77bd 0000 017c 0119 00d6 0050 01dd 015c 00db 0019 0017 0015 0013 0011 000f 000c 0000 0000 1806 240b 3070 4d3a 519a 59fa 627b 735c 0000 0000 0000 0000 0000 0000"
+  },
+  {
+   "q": 504,
+   "cores": "739c 739c 6318 4a52 35ad 0842 5a73 5231 49ef 41ad 3d8c 354a 2d08 28e7 20a5 1442 739c 0000 021b 01d8 0196 0112 033c 02fb 02ba 0279 0238 0217 01d7 0196 0155 00f3 739c 0000 015b 00f8 00b5 002f 01bc 013b 00ba 0018 0016 0014 0012 0010 000e 000b 0000 0000 1405 200a 2c4f 4919 4d79 55d9 5e5a 6f3b 0000 0000 0000 0000 0000 0000"
+  },
+  {
+   "q": 505,
+   "cores": "6f7b 6f7b 5ef7 4631 318c 0421 5652 4e10 45ce 3d8c 396b 3129 28e7 24c6 1c84 1021 6f7b 0000 01fa 01b7 0175 00f1 031b 02da 0299 0258 0217 01f6 01b6 0175 0134 00d2 6f7b 0000 013a 00d7 0094 000e 019b 011a 0099 0017 0015 0013 0011 000f 000d 000a 0000 0000 1004 1c09 282e 44f8 4958 51b8 5a39 6b1a 0000 0000 0000 0000 0000 0000"
+  },
+  {
+   "q": 506,
+   "cores": "6b5a 6b5a 5ad6 4210 2d6b 0000 5231 49ef 41ad 396b 354a 2d08 24c6 20a5 1863 0c00 6b5a 0000 01d9 0196 0154 00d0 02fa 02b9 0278 0237 01f6 01d5 0195 0154 0113 00b1 6b5a 0000 0119 00b6 0073 000d 017a 00f9 0078 0016 0014 0012 0010 000e 000c 0009 0000 0000 0c03 1808 240d 40d7 4537 4d97 5618 66f9 0000 0000 0000 0000 0000 0000"
+  },
+  {
+   "q": 507,
+   "cores": "6739 6739 56b5 3def 294a 0000 4e10 45ce 3d8c 354a 3129 28e7 20a5 1c84 1442 0800 6739 0000 01b8 0175 0133 00af 02d9 0298 0257 0216 01d5 01b4 0174 0133 00f2 0090 6739 0000 00f8 0095 0052 000c 0159 00d8 0057 0015 0013 0011 000f 000d 000b 0008 0000 0000 0802 1407 200c 3cb6 4116 4976 51f7 62d8 0000 0000 0000 0000 0000 0000"
+  },
+  {
+   "q": 508,
+   "cores": "6318 6318 5294 39ce 2529 0000 49ef 41ad 396b 3129 2d08 24c6 1c84 1863 1021 0400 6318 0000 0197 0154 0112 008e 02b8 0277 0236 01f5 01b4 0193 0153 0112 00d1 006f 6318 0000 00d7 0074 0031 000b 0138 00b7 0036 0014 0012 0010 000e 000c 000a 0007 0000 0000 0401 1006 1c0b 3895 3cf5 4555 4dd6 5eb7 0000 0000 0000 0000 0000 0000"
+  },
+  {
+   "q": 509,
+   "cores": "5ef7 5ef7 4e73 35ad 2108 0000 45ce 3d8c 354a 2d08 28e7 20a5 1863 1442 0c00 0000 5ef7 0000 0176 0133 00f1 006d 0297 0256 0215 01d4 0193 0172 0132 00f1 00b0 004e 5ef7 0000 00b6 0053 0010 000a 0117 0096 0015 0013 0011 000f 000d 000b 0009 0006 0000 0000 0000 0c05 180a 3474 38d4 4134 49b5 5a96 0000 0000 0000 0000 0000 0000"
+  },
+  {
+   "q": 510,
+   "cores": "5ad6 5ad6 4a52 318c 1ce7 0000 41ad 396b 3129 28e7 24c6 1c84 1442 1021 0800 0000 5ad6 0000 0155 0112 00d0 004c 0276 0235 01f4 01b3 0172 0151 0111 00d0 008f 002d 5ad6 0000 0095 0032 000f 0009 00f6 0075 0014 0012 0010 000e 000c 000a 0008 0005 0000 0000 0000 0804 1409 3053 34b3 3d13 4594 5675 0000 0000 0000 0000 0000 0000"
+  },
+  {
+   "q": 511,
+   "cores": "56b5 56b5 4631 2d6b 18c6 0000 3d8c 354a 2d08 24c6 20a5 1863 1021 0c00 0400 0000 56b5 0000 0134 00f1 00af 002b 0255 0214 01d3 0192 0151 0130 00f0 00af 006e 000c 56b5 0000 0074 0011 000e 0008 00d5 0054 0013 0011 000f 000d 000b 0009 0007 0004 0000 0000 0000 0403 1008 2c32 3092 38f2 4173 5254 0000 0000 0000 0000 0000 0000"
+  },
+  {
+   "q": 512,
+   "cores": "5294 5294 4210 294a 14a5 0000 396b 3129 28e7 20a5 1c84 1442 0c00 0800 0000 0000 5294 0000 0113 00d0 008e 000a 0234 01f3 01b2 0171 0130 010f 00cf 008e 004d 000b 5294 0000 0053 0010 000d 0007 00b4 0033 0012 0010 000e 000c 000a 0008 0006 0003 0000 0000 0000 0002 0c07 2811 2c71 34d1 3d52 4e33 0000 0000 0000 0000 0000 0000"
+  },
+  {
+   "q": 513,
+   "cores": "4e73 4e73 3def 2529 1084 0000 354a 2d08 24c6 1c84 1863 1021 0800 0400 0000 0000 4e73 0000 00f2 00af 006d 0009 0213 01d2 0191 0150 010f 00ee 00ae 006d 002c 000a 4e73 0000 0032 000f 000c 0006 0093 0012 0011 000f 000d 000b 0009 0007 0005 0002 0000 0000 0000 0001 0806 2410 2850 30b0 3931 4a12 0000 0000 0000 0000 0000 0000"
+  },
+  {
+   "q": 514,
+   "cores": "4a52 4a52 39ce 2108 0c63 0000 3129 28e7 20a5 1863 1442 0c00 0400 0000 0000 0000 4a52 0000 00d1 008e 004c 0008 01f2 01b1 0170 012f 00ee 00cd 008d 004c 000b 0009 4a52 0000 0011 000e 000b 0005 0072 0011 0010 000e 000c 000a 0008 0006 0004 0001 0000 0000 0000 0000 0405 200f 242f 2c8f 3510 45f1 0000 0000 0000 0000 0000 0000"
+  },
+  {
+   "q": 515,
+   "cores": "4631 4631 35ad 1ce7 0842 0000 2d08 24c6 1c84 1442 1021 0800 0000 0000 0000 0000 4631 0000 00b0 006d 002b 0007 01d1 0190 014f 010e 00cd 00ac 006c 002b 000a 0008 4631 0000 0010 000d 000a 0004 0051 0010 000f 000d 000b 0009 0007 0005 0003 0000 0000 0000 0000 0000 0004 1c0e 200e 286e 30ef 41d0 0000 0000 0000 0000 0000 0000"
+  },
+  {
+   "q": 516,
+   "cores": "4210 4210 318c 18c6 0421 0000 28e7 20a5 1863 1021 0c00 0400 0000 0000 0000 0000 4210 0000 008f 004c 000a 0006 01b0 016f 012e 00ed 00ac 008b 004b 000a 0009 0007 4210 0000 000f 000c 0009 0003 0030 000f 000e 000c 000a 0008 0006 0004 0002 0000 0000 0000 0000 0000 0003 180d 1c0d 244d 2cce 3daf 0000 0000 0000 0000 0000 0000"
+  },
+  {
+   "q": 517,
+   "cores": "3def 3def 2d6b 14a5 0000 0000 24c6 1c84 1442 0c00 0800 0000 0000 0000 0000 0000 3def 0000 006e 002b 0009 0005 018f 014e 010d 00cc 008b 006a 002a 0009 0008 0006 3def 0000 000e 000b 0008 0002 000f 000e 000d 000b 0009 0007 0005 0003 0001 0000 0000 0000 0000 0000 0002 140c 180c 202c 28ad 398e 0000 0000 0000 0000 0000 0000"
+  },
+  {
+   "q": 518,
+   "cores": "39ce 39ce 294a 1084 0000 0000 20a5 1863 1021 0800 0400 0000 0000 0000 0000 0000 39ce 0000 004d 000a 0008 0004 016e 012d 00ec 00ab 006a 0049 0009 0008 0007 0005 39ce 0000 000d 000a 0007 0001 000e 000d 000c 000a 0008 0006 0004 0002 0000 0000 0000 0000 0000 0000 0001 100b 140b 1c0b 248c 356d 0000 0000 0000 0000 0000 0000"
+  },
+  {
+   "q": 519,
+   "cores": "35ad 35ad 2529 0c63 0000 0000 1c84 1442 0c00 0400 0000 0000 0000 0000 0000 0000 35ad 0000 002c 0009 0007 0003 014d 010c 00cb 008a 0049 0028 0008 0007 0006 0004 35ad 0000 000c 0009 0006 0000 000d 000c 000b 0009 0007 0005 0003 0001 0000 0000 0000 0000 0000 0000 0000 0c0a 100a 180a 206b 314c 0000 0000 0000 0000 0000 0000"
+  },
+  {
+   "q": 520,
+   "cores": "318c 318c 2108 0842 0000 0000 1863 1021 0800 0000 0000 0000 0000 0000 0000 0000 318c 0000 000b 0008 0006 0002 012c 00eb 00aa 0069 0028 0007 0007 0006 0005 0003 318c 0000 000b 0008 0005 0000 000c 000b 000a 0008 0006 0004 0002 0000 0000 0000 0000 0000 0000 0000 0000 0809 0c09 1409 1c4a 2d2b 0000 0000 0000 0000 0000 0000"
+  },
+  {
+   "q": 521,
+   "cores": "2d6b 2d6b 1ce7 0421 0000 0000 1442 0c00 0400 0000 0000 0000 0000 0000 0000 0000 2d6b 0000 000a 0007 0005 0001 010b 00ca 0089 0048 0007 0006 0006 0005 0004 0002 2d6b 0000 000a 0007 0004 0000 000b 000a 0009 0007 0005 0003 0001 0000 0000 0000 0000 0000 0000 0000 0000 0408 0808 1008 1829 290a 0000 0000 0000 0000 0000 0000"
+  },
+  {
+   "q": 522,
+   "cores": "294a 294a 18c6 0000 0000 0000 1021 0800 0000 0000 0000 0000 0000 0000 0000 0000 294a 0000 0009 0006 0004 0000 00ea 00a9 0068 0027 0006 0005 0005 0004 0003 0001 294a 0000 0009 0006 0003 0000 000a 0009 0008 0006 0004 0002 0000 0000 0000 0000 0000 0000 0000 0000 0000 0007 0407 0c07 1408 24e9 0000 0000 0000 0000 0000 0000"
+  },
+  {
+   "q": 523,
+   "cores": "2529 2529 14a5 0000 0000 0000 0c00 0400 0000 0000 0000 0000 0000 0000 0000 0000 2529 0000 0008 0005 0003 0000 00c9 0088 0047 0006 0005 0004 0004 0003 0002 0000 2529 0000 0008 0005 0002 0000 0009 0008 0007 0005 0003 0001 0000 0000 0000 0000 0000 0000 0000 0000 0000 0006 0006 0806 1007 20c8 0000 0000 0000 0000 0000 0000"
+  },
+  {
+   "q": 524,
+   "cores": "2108 2108 1084 0000 0000 0000 0800 0000 0000 0000 0000 0000 0000 0000 0000 0000 2108 0000 0007 0004 0002 0000 00a8 0067 0026 0005 0004 0003 0003 0002 0001 0000 2108 0000 0007 0004 0001 0000 0008 0007 0006 0004 0002 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0005 0005 0405 0c06 1ca7 0000 0000 0000 0000 0000 0000"
+  },
+  {
+   "q": 525,
+   "cores": "1ce7 1ce7 0c63 0000 0000 0000 0400 0000 0000 0000 0000 0000 0000 0000 0000 0000 1ce7 0000 0006 0003 0001 0000 0087 0046 0005 0004 0003 0002 0002 0001 0000 0000 1ce7 0000 0006 0003 0000 0000 0007 0006 0005 0003 0001 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0004 0004 0004 0805 1886 0000 0000 0000 0000 0000 0000"
+  },
+  {
+   "q": 526,
+   "cores": "18c6 18c6 0842 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 18c6 0000 0005 0002 0000 0000 0066 0025 0004 0003 0002 0001 0001 0000 0000 0000 18c6 0000 0005 0002 0000 0000 0006 0005 0004 0002 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0003 0003 0003 0404 1465 0000 0000 0000 0000 0000 0000"
+  },
+  {
+   "q": 527,
+   "cores": "14a5 14a5 0421 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 14a5 0000 0004 0001 0000 0000 0045 0004 0003 0002 0001 0000 0000 0000 0000 0000 14a5 0000 0004 0001 0000 0000 0005 0004 0003 0001 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0002 0002 0002 0003 1044 0000 0000 0000 0000 0000 0000"
+  },
+  {
+   "q": 528,
+   "cores": "1084 1084 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 1084 0000 0003 0000 0000 0000 0024 0003 0002 0001 0000 0000 0000 0000 0000 0000 1084 0000 0003 0000 0000 0000 0004 0003 0002 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0001 0001 0001 0002 0c23 0000 0000 0000 0000 0000 0000"
+  },
+  {
+   "q": 529,
+   "cores": "0c63 0c63 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0c63 0000 0002 0000 0000 0000 0003 0002 0001 0000 0000 0000 0000 0000 0000 0000 0c63 0000 0002 0000 0000 0000 0003 0002 0001 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0001 0802 0000 0000 0000 0000 0000 0000"
+  },
+  {
+   "q": 530,
+   "cores": "0842 0842 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0842 0000 0001 0000 0000 0000 0002 0001 0000 0000 0000 0000 0000 0000 0000 0000 0842 0000 0001 0000 0000 0000 0002 0001 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0401 0000 0000 0000 0000 0000 0000"
+  },
+  {
+   "q": 531,
+   "cores": "0421 0421 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0421 0000 0000 0000 0000 0000 0001 0000 0000 0000 0000 0000 0000 0000 0000 0000 0421 0000 0000 0000 0000 0000 0001 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000"
+  },
+  {
+   "q": 539,
+   "cores": "0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000"
+  }
+ ]
+}

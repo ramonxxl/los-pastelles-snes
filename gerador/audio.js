@@ -2,12 +2,14 @@
 'use strict';
 
 // ---------- mapa da memoria do SPC700 (64 KB)
-//  $0200 driver | $0300 diretorio de samples | $0400-$CFFF vozes fixas e chiado
-//  $D000-$DFFF eco (ESA/EDL=2) | $E000-$E7FA anel das falas (227 blocos BRR)
-//  $E800-$FFBA anel da musica (675 blocos BRR)
-const ARAM = { DRIVER: 0x0200, DIR: 0x0300, FIXAS: 0x0400, FIXAS_FIM: 0xD000,
-  ECO: 0xD000, ECO_FIM: 0xE000,
-  FALA: 0xE000, FALA_LEN: 227 * 9, MUSICA: 0xE800, MUSICA_LEN: 675 * 9 };
+//  $0200 driver | $0300 diretorio de samples | $0400-$C3FF vozes fixas e chiado
+//  $C400-$D3FF eco (ESA/EDL=2) | $D400-$DFB4 anel das falas (333 blocos BRR)
+//  $E000-$FFBE anel da musica (903 blocos BRR)
+// (aneis grandes = folgas maiores para atravessar os quadros mais pesados com as
+// taxas altas; as vozes fixas a 9 kHz ocupam ate $C37E)
+const ARAM = { DRIVER: 0x0200, DIR: 0x0300, FIXAS: 0x0400, FIXAS_FIM: 0xC400,
+  ECO: 0xC400, ECO_FIM: 0xD400,
+  FALA: 0xD400, FALA_LEN: 333 * 9, MUSICA: 0xE000, MUSICA_LEN: 903 * 9 };
 const SRCN = { MUSICA: 3, FRITURA: 4, FALA: 5, FIXA0: 6 };   // 0-2: ondas do chiptune
 
 // ---------- mini montador de SPC700 (so o que o driver usa)
@@ -37,11 +39,15 @@ const lo = (v) => v & 255, hi = (v) => v >> 8;
 //    ponteiro A/B = porta2/3. Esses comandos devolvem o ENDX na porta 1.
 // Sempre ecoa a porta 0 no fim. No inicio avisa "pronto" ($D5 na porta 1) depois de
 // ler a porta 0: sem isso o 1o comando do CPU pode ser tomado como valor inicial.
+// O eco sai logo depois de gravar os 3 bytes, antes de avancar o ponteiro: o CPU
+// ja escreve o proximo trio enquanto o SPC700 soma 3 (o envio e limitado pelo laco
+// do SPC700, ~2 bytes por linha de video; isso tira a espera do CPU do caminho).
 const DADOS = (p) => [
   [0x8D, 0x00],                                       // mov y,#0
   [0xE4, 0xF5, 0xD7, p, 0xFC],                        // mov a,$F5 / mov [p]+y,a / inc y
   [0xE4, 0xF6, 0xD7, p, 0xFC],
   [0xE4, 0xF7, 0xD7, p],
+  [0xFA, 0x00, 0xF4],                                 // mov $F4,$00 (eco)
   [0x60, 0x98, 0x03, p, 0x98, 0x00, p + 1],           // clrc / adc p,#3 / adc p+1,#0
 ];
 // No console a leitura de uma porta no mesmo instante em que o CPU a escreve pode
@@ -66,14 +72,15 @@ const DRIVER = monta(ARAM.DRIVER, [
   { br: 0xD0, alvo: 'laco' },                         // bne laco (mudou no meio)
   [0x64, 0x00],                                       // cmp a,$00
   { br: 0xF0, alvo: 'laco' },                         // beq laco
-  [0xC4, 0x00],                                       // mov $00,a
-  { br: 0xF3, pre: [0x00], alvo: 'cmd' },             // bbc7 $00,cmd
-  { br: 0xC3, pre: [0x00], alvo: 'dadosB' },          // bbs6 $00,dadosB
+  [0xC4, 0x00, 0x5D],                                 // mov $00,a / mov x,a (mov dp,a nao mexe nos flags)
+  { br: 0x10, alvo: 'cmd' },                          // bpl cmd (bit 7 = 0: comando)
+  [0x28, 0x40],                                       // and a,#$40
+  { br: 0xD0, alvo: 'dadosB' },                       // bne dadosB (bit 6: ponteiro B)
   ...DADOS(0x02),
-  { br: 0x2F, alvo: 'ack' },
+  { br: 0x2F, alvo: 'laco' },
   { rot: 'dadosB' },
   ...DADOS(0x06),
-  { br: 0x2F, alvo: 'ack' },
+  { br: 0x2F, alvo: 'laco' },
   { rot: 'cmd' },
   [0xE4, 0xF5],                                       // mov a,$F5
   { br: 0x30, alvo: 'ptr' },                          // bmi ptr

@@ -31,7 +31,8 @@ ICO_VOLTAR = 18
 ICO_NOVO   = 20
 ICO_CONT   = 21
 ICO_OPC    = 22
-ICO_DIF    = 23
+ICO_DIF    = 1                ; dificuldade: frigideira (o calor da cozinha)
+ICO_SENHA  = 23               ; password: cadeado com chave
 
 ; ---------------------------------------------------------------- cenas
 ; chamada pelas cenas de painel: degrade, faixa desligada e animacao de abertura
@@ -816,7 +817,13 @@ TutNmi:
     stx $4372
     lda #^TutMathTab
     sta $4374
-    lda #$C0
+    lda #(VRAM_BG2MAP >> 8) ; mapa do balao (a ajuda usa os seus)
+    sta BG2SC
+    lda dim_on
+    cmp #3
+    bne :+
+    jsl AjudaNmi            ; ajuda da pausa: balao grande (outras tabelas e mapa)
+:   lda #$C0
     sta HDMAEN
     rts
 
@@ -841,11 +848,14 @@ TutSprites:
     .i16
     lda dim_on
     cmp #2
-    beq :+
+    bcs :+
     rts
 :   ldx #0
 @l: cpx oam_idx            ; so os sprites que a tela usou
     bcs @r
+    lda dim_on              ; ajuda (3): o balao cobre a tela, todos somem
+    cmp #3
+    beq @some
     ; encosta no balao? (supondo 16x16: linhas y..y+15, colunas x..x+15)
     lda oam_buf+1,x
     cmp #(TUT_Y0-15)
@@ -857,6 +867,7 @@ TutSprites:
     bcc @atras
     cmp #(TUT_X1+1)
     bcs @atras
+@some:
     lda #$F0
     sta oam_buf+1,x
     bra @nx
@@ -870,4 +881,7 @@ TutSprites:
     inx
     inx
     bra @l
-@r: rts
+@r: lda d_paused            ; pausa: icones dos itens por cima do balao
+    beq :+
+    jmp PauseSprites
+:   rts

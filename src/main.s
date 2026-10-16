@@ -1,6 +1,6 @@
 ; =====================================================================
 ;  LOS PASTELLES: O IMPERIO DO PASTEL  -  ROM de Super Nintendo
-;  Montador: ca65 (cc65).  Mapa: LoROM SlowROM, 1 MB, 2 KB SRAM
+;  Montador: ca65 (cc65).  Mapa: LoROM SlowROM, 2 MB, 2 KB SRAM
 ;  Convencao: A 8 bits / X,Y 16 bits, DBR = $80, D = $0000
 ; =====================================================================
 .p816
@@ -95,6 +95,9 @@ spr_tile:   .res 2
 spr_attr:   .res 1
 spr_size:   .res 1
 spr_hi:     .res 1
+spr_hix:    .res 2      ; AddSprite: indice na SprHiTab (o byte de cima fica 0)
+oam_hib:    .res 2      ; AddSprite: byte da tabela alta do proximo slot
+oam_his:    .res 1      ; AddSprite: (slot % 4) * 4 do proximo slot
 txt_pos:    .res 2
 txt_attr:   .res 1
 txt_ptr:    .res 3
@@ -124,6 +127,7 @@ mu_ptr:     .res 3      ; musica gravada: ponteiro longo na ROM
 lt_b0:      .res 1      ; lote do stream (src/voz.s)
 lt_b1:      .res 1
 lt_b2:      .res 1
+lt_p0:      .res 1      ; LOTE: valor da porta 0 do proximo trio
 lt_n:       .res 2
 lt_ant:     .res 2
 
@@ -179,6 +183,7 @@ FastReset:
     jsr ClearVram
     jsr ApuUpload
     jsr AudioInit
+    jsl SramDetecta         ; (banco 28) o cartucho tem SRAM?
     jsr LoadOptions
     A16
     lda #$ACE1
@@ -216,12 +221,12 @@ FastReset:
     sta BG3VOFS
     lda #$15                ; BG1 + BG3 + OBJ
     sta TM
-    jsr OamClear
+    jsr OamZera
     jsr ClearBg3
     stz bright
     lda #$FF
     sta next_state
-    lda #ST_SPLASH
+    lda #ST_ABERTURA
     sta next_state
     jsr UiOff
     lda #$81                ; NMI + leitura automatica do controle
@@ -297,6 +302,12 @@ NmiFast:
     stx $4305
     lda #$01
     sta MDMAEN
+    ; quadro novo da animacao grande (banco28.s): vai no lugar do BG3 neste quadro
+    lda anim_sujo
+    beq @bg3
+    jsl AnimDma
+    bra @nobg3
+@bg3:
     ; mapa BG3
     lda bg3_dirty
     beq @nobg3
@@ -363,6 +374,13 @@ NmiFast:
     bra @dimd
 @nodim:
     jsr UiNmi
+    lda ab_on               ; abertura RAMON: rolagem da cortina e camadas
+    beq :+
+    jsl AbNmi
+:
+    lda anim_vis            ; animacao grande do expediente (BG2)
+    beq @dimd
+    jsl AnimNmi
 @dimd:
     lda bright
     sta INIDISP
@@ -692,6 +710,15 @@ NumConv:
     .i16
     ldx #0
     ldy #0
+    A16
+    lda num+2               ; cabe em 16 bits (< 100000): os 3 primeiros digitos sao 0
+    A8
+    bne @digit
+    stz numdig
+    stz numdig+1
+    stz numdig+2
+    ldx #12
+    ldy #3
 @digit:
     lda #0
     sta numdig,y
@@ -768,7 +795,36 @@ PrintNum:
     jmp PrintStr
 
 ; ---------------------------------------------------------------- sprites
+; esconde (y = $F0) so os sprites postos desde a ultima limpeza (os slots de botoes
+; e pilula sao dos BtnSprites/PillSprites) e zera a tabela alta deles
 OamClear:
+    .a8
+    .i16
+    ldx oam_idx
+    beq @h
+    lda #$F0
+@l: dex
+    dex
+    dex
+    dex
+    sta oam_buf+1,x
+    bne @l
+@h: A16
+    ldx #0
+:   stz oam_buf+512,x
+    inx
+    inx
+    cpx #(OAM_BTN/16)
+    bcc :-
+    A8
+    ldx #0
+    stx oam_idx
+    stx oam_hib
+    stz oam_his
+    rts
+
+; apaga a OAM inteira (boot: a RAM zerada poria 128 sprites no canto)
+OamZera:
     .a8
     .i16
     ldx #0
@@ -790,26 +846,25 @@ OamClear:
     bne @h
     ldx #0
     stx oam_idx
+    stx oam_hib
+    stz oam_his
     rts
 
 ; adiciona sprite: spr_x(16, com sinal), spr_y, spr_tile(9 bits), spr_attr, spr_size(0=8x8 1=16x16)
 AddSprite:
     .a8
     .i16
-    A16
-    lda spr_x
-    bmi @neg
-    cmp #256
-    bcs @skip16
-    bra @ok
-@neg:
-    cmp #$FFE1
-    bcc @skip16
-@ok:
-    A8
+    ; (rodava ~70 vezes por quadro no dia: sem trocar a largura dos registradores e
+    ; com a posicao na tabela alta acompanhando o slot, oam_hib/oam_his)
     ldx oam_idx
     cpx #OAM_BTN            ; os ultimos slots ficam para os botoes do texto
     bcs @skip
+    lda spr_x+1             ; x de 0 a 255
+    bne @alto
+    lda spr_size            ; bits altos: tamanho (bit 1), x9 = 0
+    asl a
+@hb:
+    sta spr_hi
     lda spr_x
     sta oam_buf,x
     lda spr_y
@@ -820,51 +875,45 @@ AddSprite:
     and #$01
     ora spr_attr
     sta oam_buf+3,x
-    ; bits altos: x9 e tamanho
-    lda spr_x+1
-    and #$01
-    sta spr_hi
-    lda spr_size
-    beq :+
     lda spr_hi
-    ora #$02
-    sta spr_hi
-:   lda spr_hi
     beq @adv
-    A16
-    txa
-    lsr a
-    lsr a
-    and #$0003
-    tay
-    txa
-    lsr a
-    lsr a
-    lsr a
-    lsr a
-    tax
-    A8
-    lda spr_hi
-@sh:
-    cpy #0
-    beq @shd
-    asl a
-    asl a
-    dey
-    bra @sh
-@shd:
-    ora oam_buf+512,x
-    sta oam_buf+512,x
+    ora oam_his             ; SprHiTab[(slot % 4) * 4 + bits]
+    sta spr_hix             ; (o byte de cima de spr_hix e sempre 0)
+    ldy spr_hix
+    lda SprHiTab,y
+    ldy oam_hib
+    ora oam_buf+512,y
+    sta oam_buf+512,y
 @adv:
-    A16
-    lda oam_idx
+    inx
+    inx
+    inx
+    inx
+    stx oam_idx
+    lda oam_his
     clc
     adc #4
-    sta oam_idx
-@skip16:
-    A8
+    and #$0F
+    sta oam_his
+    bne @skip
+    ldy oam_hib
+    iny
+    sty oam_hib
 @skip:
     rts
+@alto:
+    inc a                   ; $FF (x negativo) -> 0; x >= 256: fora da tela
+    bne @skip
+    lda spr_x
+    cmp #$E1                ; ate 31 pixels para a esquerda
+    bcc @skip
+    lda spr_size
+    asl a
+    ora #$01                ; x9
+    bra @hb
+
+; bits altos (b = 0..3) ja no lugar do slot s % 4: SprHiTab[s * 4 + b] = b << (2 * s)
+SprHiTab: .byte 0, 1, 2, 3,  0, 4, 8, 12,  0, 16, 32, 48,  0, 64, 128, 192
 
 ; sprite 32x32 (4 sprites de 16x16) em spr_x/spr_y, spr_tile = canto superior esquerdo
 AddSprite32:
@@ -922,6 +971,10 @@ LoadBasePalettes:
     PAL_LOAD SprPal, 128, 256
     rts
 
+; destino do RTS das rotinas do banco 0 chamadas com FAR0 (macros.inc)
+Rtl0:
+    rtl
+
 .include "src/audio.s"
 .include "src/voz.s"
 .include "src/game.s"
@@ -930,6 +983,7 @@ LoadBasePalettes:
 .include "src/segredo.s"
 .include "src/ui.s"
 .include "src/demo.s"
+.include "src/banco28.s"
 
 ; ---------------------------------------------------------------- dados
 .segment "RODATA"
@@ -960,8 +1014,19 @@ IconGfx_end:
 IconPal:    .incbin "gen/icon_pal.bin"
 .include "gen/icon_pal.inc"
 .include "gen/voz.inc"         ; tabelas das vozes (acesso longo, f:)
+.segment "BANK13"
+; abertura RAMON (gerador/abertura.js)
+AbTiles:    .incbin "gen/abertura_tiles.bin"
+AbTiles_end:
+AbBg1:      .incbin "gen/abertura_bg1.bin"
+AbBg2:      .incbin "gen/abertura_bg2.bin"
+AbPal:      .incbin "gen/abertura_pal.bin"
+AbObjTiles: .incbin "gen/abertura_obj.bin"   ; perna do R (sprites)
+AbObjTiles_end:
+.include "gen/abertura.inc"
 .segment "BANK11"
 .include "gen/cards.inc"
+.include "gen/ajuda.inc"       ; textos da ajuda da pausa (acesso longo, f:)
 
 .segment "BANK2"
 MenuTiles:  .incbin "gen/menu_tiles.bin"
@@ -978,6 +1043,11 @@ TutTiles:   .incbin "gen/tut_tiles.bin"
 TutTiles_end:
 TutMap:     .incbin "gen/tut_map.bin"
 TutPal:     .incbin "gen/tut_pal.bin"
+AjTiles:    .incbin "gen/aj_tiles.bin"
+AjTiles_end:
+AjMapA:     .incbin "gen/aj_mapa.bin"
+AjMapB:     .incbin "gen/aj_mapb.bin"
+AjPal:      .incbin "gen/aj_pal.bin"
 
 .segment "BANK3"
 TitleTiles: .incbin "gen/title_tiles.bin"
@@ -1079,7 +1149,7 @@ Shop4_2Pal:   .incbin "gen/shop4_2_pal.bin"
     .byte "LOS PASTELLES        "
     .byte $20               ; LoROM
     .byte $02               ; ROM + RAM + bateria
-    .byte $0A               ; 1 MB
+    .byte $0B               ; 2 MB (o audio fica nos bancos 32-63)
     .byte $01               ; 2 KB de SRAM
     .byte $01               ; America do Norte (NTSC)
     .byte $00

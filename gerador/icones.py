@@ -2,7 +2,8 @@
 # Baixa os PNG uma vez (cache em arte_fonte/emoji), reduz para 14x14, poe contorno
 # escuro (16x16), reduz cores para 4 paletas de 15 cores e grava os tiles 4bpp.
 # Saidas: gen/icon_tiles.bin (6 linhas de 16 tiles), gen/icon_pal.bin (4 paletas),
-#         gen/preview/icones.png
+#         gen/icon_pal.inc (IconPalTab), gen/preview/icones.png e a segunda folha,
+#         da tela de fim do dia (gen/icon_res_*, IconResPalTab, ICONES_RES)
 import os, sys, urllib.request
 from PIL import Image
 
@@ -37,7 +38,32 @@ ICONES = [
     '2728',   # 20 novo jogo: brilhos
     '1f4be',  # 21 continuar: disquete
     '2699',   # 22 opcoes: engrenagem
-    '1f525',  # 23 dificuldade: fogo
+    '1f510',  # 23 password: cadeado com chave (a dificuldade usa a frigideira, 1)
+]
+# tela de fim do dia (src/banco28.s, ICR_*): carregada por cima da folha acima
+ICONES_RES = [
+    '1f307',  # 0 fim do dia: por do sol
+    '1f642',  # 1 clientes atendidos
+    '2b50',   # 2 pasteis perfeitos
+    '1f5d1',  # 3 desperdicio: lixeira
+    '1f6f5',  # 4 entregas: lambreta
+    '1f95f',  # 5 vendas: pastel (dumpling)
+    '1fa99',  # 6 gorjetas: moeda
+    '1f3ea',  # 7 outras unidades: loja
+    '1f3e0',  # 8 aluguel: casa
+    '1f9d1-200d-1f373',  # 9 salarios: cozinheiro
+    '1f4c8',  # 10 lucro: grafico subindo
+    '1f4c9',  # 11 prejuizo: grafico descendo
+    '1f4b0',  # 12 caixa: saco de dinheiro
+    '2764',   # 13 reputacao: coracao
+    '1f3c5',  # 14 nivel: medalha
+    '2728',   # 15 experiencia: brilhos
+    '1f389',  # 16 subiu de nivel: confete
+    '1f3c6',  # 17 desafio cumprido: trofeu
+    '274c',   # 18 desafio falhou: x
+    '1f3af',  # 19 missao: alvo
+    '1f4ca',  # 20 grafico do lucro
+    '1f947',  # 21 melhor dia: medalha de ouro
 ]
 CONTORNO = (40, 20, 12)
 
@@ -105,8 +131,9 @@ def enc4(pix):
     return bytes(b)
 
 
-def main():
-    imgs = [icone(c) for c in ICONES]
+def gera(lista, nome, tabela, previa):
+    assert len(lista) <= 24, nome + ': cabem 24 icones (tiles OBJ 0-95)'
+    imgs = [icone(c) for c in lista]
     # 4 grupos de icones com paleta propria (ordem fixa: o jogo usa i % 4... nao:
     # o grupo vai numa tabela gerada junto)
     grupos = [[], [], [], []]
@@ -139,20 +166,25 @@ def main():
     for ty in range(6):
         for tx in range(16):
             tiles += enc4([folha[ty * 8 + y][tx * 8 + x] for y in range(8) for x in range(8)])
-    open(os.path.join(GEN, 'icon_tiles.bin'), 'wb').write(tiles)
+    open(os.path.join(GEN, nome + '_tiles.bin'), 'wb').write(tiles)
     palb = bytearray()
     for pal in pals:
         cores = [(0, 0, 0)] + pal + [(0, 0, 0)] * (15 - len(pal))
         for c in cores[:16]:
             v = (c[0] >> 3) | ((c[1] >> 3) << 5) | ((c[2] >> 3) << 10)
             palb += bytes([v & 255, v >> 8])
-    open(os.path.join(GEN, 'icon_pal.bin'), 'wb').write(palb)
+    open(os.path.join(GEN, nome + '_pal.bin'), 'wb').write(palb)
     # tabela: paleta (3..6) de cada icone
-    open(os.path.join(GEN, 'icon_pal.inc'), 'w').write(
-        '; gerado por gerador/icones.py\nIconPalTab: .byte ' + ', '.join(str(3 + g) for g in grupo_de) + '\n')
+    open(os.path.join(GEN, nome + '_pal.inc'), 'w').write(
+        '; gerado por gerador/icones.py\n' + tabela + ': .byte ' + ', '.join(str(3 + g) for g in grupo_de) + '\n')
     os.makedirs(os.path.join(GEN, 'preview'), exist_ok=True)
-    prev.resize((512, 192), Image.NEAREST).save(os.path.join(GEN, 'preview', 'icones.png'))
-    print('icones:', len(imgs), 'grupos', [len(g) for g in grupos])
+    prev.resize((512, 192), Image.NEAREST).save(os.path.join(GEN, 'preview', previa + '.png'))
+    print(nome + ':', len(imgs), 'icones, grupos', [len(g) for g in grupos])
+
+
+def main():
+    gera(ICONES, 'icon', 'IconPalTab', 'icones')
+    gera(ICONES_RES, 'icon_res', 'IconResPalTab', 'icones_resultado')
 
 
 if __name__ == '__main__':

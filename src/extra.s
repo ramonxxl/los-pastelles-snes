@@ -38,7 +38,10 @@ LoadOptions:
 SaveOptions:
     .a8
     .i16
-    lda #'O'
+    lda tem_sram            ; sem SRAM as opcoes valem so ate desligar
+    bne :+
+    rts
+:   lda #'O'
     sta f:OPT_SRAM
     lda #'P'
     sta f:OPT_SRAM+1
@@ -383,14 +386,7 @@ ChooseInit:
     .i16
     jsr FadeOut
     jsr ScreenOff
-    lda #$80
-    sta VMAIN
-    jsr UiOff
-    VRAM_LOAD MapTiles, VRAM_BG1TILES, (MapTiles_end - MapTiles)
-    VRAM_LOAD MapMap, VRAM_BG1MAP, 2048
-    jsr LoadBasePalettes
-    PAL_LOAD MapPal, 32, 32
-    jsr ClearBg3
+    jsr MapCarrega
     lda d_unit
     cmp #5
     bcc :+
@@ -442,65 +438,39 @@ ChooseDraw:
     PRINT TXT_CH_DIR, 30, 25, 1
     rts
 
-; todas as lojas abertas; a escolhida pula e ganha o cursor
+; seta pulando em cima da loja escolhida (os predios ja estao no mapa)
 ChooseSprites:
     .a8
     .i16
     jsr OamClear
-    lda #1
-    sta spr_size
-    ldy #0
-@st:
-    tya
-    beq :+
-    dec a
-    cmp s_stores
-    bcs @done
-:   phy
     A16
-    tya
+    lda d_unit
+    and #$00FF
     asl a
     tax
     A8
-    lda StoreXY,x
+    lda f:StoreXY,x
     sta spr_x
     stz spr_x+1
-    lda StoreXY+1,x
-    sta spr_y
-    A16
-    lda #SPR_LOJA
-    sta spr_tile
-    A8
-    lda #$30
-    sta spr_attr
-    tya
-    cmp d_unit
-    bne @nosel
-    ; loja escolhida: pula + seta em cima
     lda frame
     lsr a
     lsr a
     and #$03
     eor #$FF
-    clc
-    adc spr_y
-    sta spr_y
-    jsr AddSprite
-    lda spr_y
     sec
-    sbc #16
+    adc f:StoreXY+1,x
     sta spr_y
     A16
     lda #SPR_CURSOR
     sta spr_tile
     A8
-@nosel:
+    lda #$30
+    sta spr_attr
+    lda #1
+    sta spr_size
     jsr AddSprite
-    ply
-    iny
-    cpy #5
-    bne @st
-@done:
+    stz spr_size
+    jsl MapAgua
     rts
 
 ChooseUpdate:
@@ -603,6 +573,8 @@ LoadShopScene:
     VRAM_LOAD TutTiles, TUT_VRAM, (TutTiles_end - TutTiles)
     VRAM_LOAD TutMap, VRAM_BG2MAP, 2048
     PAL_LOAD TutPal, 48, 32
+    jsl AjudaCarrega        ; balao grande e controle da ajuda (pausa)
+    jsl AnimCarrega         ; cartao das animacoes grandes (montagem do pastel)
     rts
 
 .macro UNIT_SCENE n, r
@@ -818,17 +790,27 @@ SlotsDraw:
     lda sl_mode
     bne :+
     PRINT TXT_SL_NOVO, 3, 17, 7
-    bra :+++
+    bra @conf
 :   cmp #2
     bne :+
     PRINT TXT_SL_SEC, 3, 17, 5
-    bra :++
+    bra @conf
+:   cmp #3
+    bne :+
+    PRINT TXT_SL_SENHA, 3, 17, 5
+    bra @conf
 :   PRINT TXT_SL_CONT, 3, 17, 7
-:   lda sl_conf
+@conf:
+    lda sl_conf
     beq @aj
     cmp #1
+    bne :++
+    lda sl_mode
+    cmp #3
     bne :+
-    PRINT TXT_SL_CONF, 3, 20, 5
+    PRINT TXT_SL_CONF3, 3, 20, 5
+    bra @aj
+:   PRINT TXT_SL_CONF, 3, 20, 5
     bra @aj
 :   PRINT TXT_SL_VAZ2, 3, 20, 5
 @aj:
@@ -879,6 +861,8 @@ SlotsUpdate:
 @a:
     lda sl_mode
     beq @novo
+    cmp #3
+    beq @senha
     cmp #2
     bne @cont
     lda menu_sel
@@ -922,6 +906,26 @@ SlotsUpdate:
     sta sl_conf
     SFX SFX_ALARME
     jmp SlotsDraw
+@senha:
+    ; jogo do password (ja na RAM): escolher onde salvar e seguir para o dia
+    lda menu_sel
+    jsr HasSaveSlot
+    bcc @grava
+    lda sl_conf
+    cmp #1
+    beq @grava
+    lda #1
+    sta sl_conf
+    SFX SFX_ALARME
+    jmp SlotsDraw
+@grava:
+    lda menu_sel
+    sta save_slot
+    jsr SaveGame
+    SFX SFX_OK
+    lda #ST_PREDAY
+    sta next_state
+    rts
 @cria:
     lda menu_sel
     sta save_slot
@@ -938,6 +942,7 @@ SplashInit:
     .i16
     jsr FadeOut
     jsr ScreenOff
+    jsl AbFim               ; sai da abertura RAMON (registradores do resto do jogo)
     jsr LoadMenuScene
     jsr ClearBg3
     PRINT TXT_SP_NOME, 10, 11, 5
