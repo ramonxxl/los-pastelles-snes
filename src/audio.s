@@ -94,7 +94,7 @@ AudioInit:
     DSP $2D, $00        ; PMON
     DSP $3D, $00        ; NON: sem ruido (o chiado agora e gravado)
     DSP $5D, $03        ; DIR = $0300
-    DSP $6D, $D0        ; ESA = $D000 (buffer do eco)
+    DSP $6D, (ECO_ARAM >> 8) ; ESA (buffer do eco)
     DSP $7D, $02        ; EDL = 32 ms ($D000-$DFFF; o resto e o anel das falas)
     DSP $0D, $38        ; feedback do eco
     DSP $4D, $05        ; eco nas vozes 0 (melodia) e 2 (acordes)

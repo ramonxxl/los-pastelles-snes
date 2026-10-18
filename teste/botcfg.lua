@@ -3,6 +3,21 @@ SHOT_STATES = {}
 SHOT_EVERY = nil
 local mapdone = false
 trofdone = false
+-- abas da loja: itens na ordem da tela (repete ShopOrd em src/telas.s)
+SHOP_ABAS = { {0, 3, 15, 20, 19, 18}, {1, 2, 10, 11, 12, 14}, {4, 9, 13, 8}, {5, 6, 7, 16, 17} }
+-- botao para levar o cursor da loja ate o item alvo (nil = ja esta nele)
+function SHOP_IR(r8, alvo)
+  local aba, pos = r8("shop_aba") + 1, r8("shop_pos") + 1
+  for a, itens in ipairs(SHOP_ABAS) do
+    for p, item in ipairs(itens) do
+      if item == alvo then
+        if a ~= aba then return a > aba and "r" or "l" end
+        if p ~= pos then return p > pos and "down" or "up" end
+        return nil
+      end
+    end
+  end
+end
 function SHOP(r8, r16, f)
   if f % 12 ~= 0 then return nil end
   local sel = r8("menu_sel")
@@ -25,7 +40,8 @@ function SHOP(r8, r16, f)
   elseif r8("s_stores") < 4 and lvl >= 13 and money >= 1550 + 500 * r8("s_stores") then target = 6
   elseif r8("s_fran") < 5 and lvl >= 21 and r8("s_boss") >= 3 and money >= 4050 then target = 7
   end
-  if sel < target then return "down" elseif sel > target then return "up" end
+  local b = SHOP_IR(r8, target)
+  if b then return b end
   if target == 16 then mapdone = true end
   if target == 17 then trofdone = true end
   return "a"

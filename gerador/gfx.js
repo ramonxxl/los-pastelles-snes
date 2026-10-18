@@ -121,4 +121,4 @@ function png(img, palettes, scale = 2) {
   return Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]), chunk('IHDR', ih), chunk('IDAT', zlib.deflateSync(raw)), chunk('IEND', Buffer.alloc(0))]);
 }
 
-module.exports = { Img, bgr555, palBytes, enc4, enc2, tilePixels, sceneToBG, png, hex };
+module.exports = { Img, bgr555, palBytes, enc4, enc2, tilePixels, sceneToBG, png, hex, flipH, flipV };

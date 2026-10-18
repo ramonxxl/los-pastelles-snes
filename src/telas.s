@@ -3,9 +3,23 @@
 ; =====================================================================
 
 StateInit:
-    .word TitleInit, IntroInit, CardInit, PreDayInit, DayInit, ResultsInit, ShopInit, MapInit, OptInit, ChooseInit, SlotsInit, SplashInit, TrofInit, SecretInit
+    .word TitleInit, IntroInit, CardInit, PreDayInit, DayInit, ResultsInit, ShopInit, MapInit, OptInit, ChooseInit, SlotsInit, SplashInit, TrofInit, SecretInit, SenhaInit, AbInit
 StateUpdate:
-    .word TitleUpdate, IntroUpdate, CardUpdate, NoUpdate, DayUpdate, ResultsUpdate, ShopUpdate, MapUpdate, OptUpdate, ChooseUpdate, SlotsUpdate, SplashUpdate, TrofUpdate, SecretUpdate
+    .word TitleUpdate, IntroUpdate, CardUpdate, NoUpdate, DayUpdate, ResultsUpdate, ShopUpdate, MapUpdate, OptUpdate, ChooseUpdate, SlotsUpdate, SplashUpdate, TrofUpdate, SecretUpdate, SenhaUpdate, AbUpdate
+
+; tela do password (banco 28)
+SenhaInit:
+    jsl SenhaInitL
+    rts
+SenhaUpdate:
+    jsl SenhaUpdateL
+    rts
+AbInit:
+    jsl AbInitL
+    rts
+AbUpdate:
+    jsl AbUpdateL
+    rts
 
 NoUpdate:
     .a8
@@ -120,23 +134,56 @@ TIT_COL  = 14               ; coluna do texto (o icone fica a esquerda)
 TitleMenu:
     .a8
     .i16
-    PRINT TXT_TIT_SUB, 6, 18, 5
-    PRINT TXT_TIT_AJ, 10, 26, 7
-    ; itens: 0 novo jogo, 1 continuar (se houver save), 2 opcoes
-    lda #0
-    ldx #TXT_TIT_NOVO
-    jsr TitItem
+    ; itens: novo jogo, continuar (se houver save), password, opcoes. Com os 4 o
+    ; subtitulo sai e a lista sobe 2 linhas (o cartao nao tem mais espaco)
+    lda #TIT_LIN
+    sta tit_lin
     lda title_has_save
     beq :+
-    lda #1
-    ldx #TXT_TIT_CONT
+    lda #(TIT_LIN-2)
+    sta tit_lin
+    bra :++
+:   PRINT TXT_TIT_SUB, 6, 18, 5
+:   PRINT TXT_TIT_AJ, 10, 26, 7
+    stz loop_j
+@l: lda loop_j
+    jsr TitId
+    A16
+    and #$00FF
+    asl a
+    tax
+    lda TitTxt,x
+    tax
+    A8
+    lda loop_j
     jsr TitItem
-    lda #2
-    ldx #TXT_TIT_OPC
-    jmp TitItem
-:   lda #1
-    ldx #TXT_TIT_OPC
-    jmp TitItem
+    inc loop_j
+    jsr TitleCount
+    cmp loop_j
+    bne @l
+    rts
+
+TIT_NOVO  = 0
+TIT_CONT  = 1
+TIT_SENHA = 2
+TIT_OPC   = 3
+TitTxt: .word TXT_TIT_NOVO, TXT_TIT_CONT, TXT_TIT_SENHA, TXT_TIT_OPC
+TitIco: .byte ICO_NOVO, ICO_CONT, ICO_SENHA, ICO_OPC
+
+; A = posicao no menu -> A = item (sem save, CONTINUAR nao aparece)
+TitId:
+    .a8
+    .i16
+    cmp #TIT_CONT
+    bcc @r
+    pha
+    lda title_has_save
+    bne :+
+    pla
+    inc a
+    rts
+:   pla
+@r: rts
 
 ; A = posicao no menu, X = texto
 TitItem:
@@ -144,9 +191,9 @@ TitItem:
     .i16
     sta loop_i
     stx tmp3
-    asl a                   ; linha = TIT_LIN + 2 * posicao
+    asl a                   ; linha = tit_lin + 2 * posicao
     clc
-    adc #TIT_LIN
+    adc tit_lin
     sta loop_i+1
     A16
     and #$00FF
@@ -195,7 +242,7 @@ TitleCount:
     .i16
     lda title_has_save
     clc
-    adc #2
+    adc #3
     rts
 
 TitleUpdate:
@@ -216,6 +263,16 @@ TitleUpdate:
     jsr CodeCheck
     bcc :+
     SFX SFX_NIVEL
+    lda tem_sram
+    bne @secsram
+    ; sem SRAM nao ha jogo salvo: o menu secreto vem pelo password
+    stz senha_modo
+    lda #1
+    sta pw_festa
+    lda #ST_SENHA
+    sta next_state
+    rts
+@secsram:
     lda #2
     sta sl_mode
     lda #ST_SLOTS
@@ -258,18 +315,30 @@ TitleUpdate:
     SFX SFX_OK
     ; traduz posicao -> item
     lda menu_sel
+    jsr TitId
+    cmp #TIT_NOVO
     beq @novo
-    lda title_has_save
-    beq @opc
-    lda menu_sel
-    cmp #1
+    cmp #TIT_CONT
     beq @cont
-@opc:
+    cmp #TIT_SENHA
+    beq @senha
     lda #ST_OPTIONS
     sta next_state
     rts
+@senha:
+    stz senha_modo          ; digitar o password
+    stz pw_festa
+    lda #ST_SENHA
+    sta next_state
+    rts
 @novo:
-    stz sl_mode
+    lda tem_sram
+    bne :+
+    jsr NewGame             ; sem SRAM: nao ha onde escolher, comeca direto
+    lda #ST_INTRO
+    sta next_state
+    rts
+:   stz sl_mode
     lda #ST_SLOTS
     sta next_state
     rts
@@ -282,8 +351,6 @@ TitleUpdate:
     rts
 
 ; icones dos itens do menu do titulo (o escolhido balanca)
-TitIcones:  .byte ICO_NOVO, ICO_CONT, ICO_OPC
-TitIcones2: .byte ICO_NOVO, ICO_OPC
 TitleSprites:
     .a8
     .i16
@@ -293,26 +360,24 @@ TitleSprites:
     lda #(TIT_COL*8 - 22)
     sta spr_x
     A8
-    lda loop_j              ; y = (TIT_LIN + 2 * posicao) * 8 - 4
+    lda loop_j              ; y = (tit_lin + 2 * posicao) * 8 - 4
     asl a
     clc
-    adc #TIT_LIN
+    adc tit_lin
     asl a
     asl a
     asl a
     sec
     sbc #4
     sta spr_y
-    A16
     lda loop_j
+    jsr TitId
+    A16
     and #$00FF
     tax
     A8
-    lda TitIcones,x
-    ldy title_has_save
-    bne :+
-    lda TitIcones2,x
-:   pha
+    lda TitIco,x
+    pha
     lda loop_j
     cmp menu_sel
     beq :+
@@ -598,9 +663,7 @@ DrawCard:
     tyx
     lda #^CardTable
     jsr TypeStartB          ; texto aparece letra por letra
-    ldx #TXT_C_A
-    lda #26
-    jsr Footer
+    jsl CardRodape
     rts
 
 PortTiles: .word SPR_PORT_0, SPR_PORT_1, SPR_PORT_2, SPR_PORT_3, SPR_CUST_4_0, SPR_MASCOTE_0
@@ -682,6 +745,7 @@ MascotFrame:
 CardInput:
     .a8
     .i16
+    jsl CardBotaoB          ; {B} na carta de aviso volta ao menu
     lda pad_new+1
     and #KH_START
     bne @next
@@ -708,11 +772,15 @@ CardInput:
     rts
 
 ; ================================================================ ANTES DO DIA
-LevelCap: .byte 5, 12, 20, 30, 99
+LevelCap: .byte NV_DESAFIO0, NV_DESAFIO1, NV_DESAFIO2, NV_DESAFIO3, 99
 
 PreDayInit:
     .a8
     .i16
+    jsl DiaBloqueado        ; C=1: o dia nao pode comecar (ja foi para a carta de aviso)
+    bcc :+
+    rts
+:
     lda #$FF
     sta d_boss
     stz d_event
@@ -1052,7 +1120,7 @@ ResultsInit:
     jsr TrophyCheck
     jsr HistPush
     stz r_page
-    jsr DrawResults
+    jsl DrawResults         ; banco 28
     A16
     inc s_day
     A8
@@ -1096,202 +1164,6 @@ HistPush:
 :   rts
 
 ; grafico de barras: verde = lucro, vermelho = prejuizo
-DrawChart:
-    .a8
-    .i16
-    jsr ClearBg3
-    PRINT TXT_G_TIT, 3, 3, 5
-    lda hist_n
-    bne :+
-    PRINT TXT_G_VAZIO, 3, 10, 4
-    jmp @foot
-:   ; maior valor absoluto -> passo = max/8 (minimo 1)
-    ldx #0
-    stx tmp2
-    stx tmp4
-@mx:
-    A16
-    lda hist,x
-    bpl :+
-    eor #$FFFF
-    inc a
-:   cmp tmp2
-    bcc :+
-    sta tmp2
-:   A8
-    inx
-    inx
-    cpx #14
-    bne @mx
-    A16
-    lda tmp2
-    lsr a
-    lsr a
-    lsr a
-    bne :+
-    lda #1
-:   sta tmp2            ; passo
-    lda #0
-    sta tmp4            ; melhor dia
-    A8
-    ; barras: entradas 7-n..6
-    lda #7
-    sec
-    sbc hist_n
-    sta loop_i
-@bar:
-    lda loop_i
-    cmp #7
-    bcc :+
-    jmp @foot
-:   A16
-    and #$00FF
-    asl a
-    tax
-    lda hist,x
-    sta tmp3
-    bmi :+
-    cmp tmp4
-    bcc :+
-    sta tmp4
-:   ; altura = |v| / passo
-    lda tmp3
-    bpl :+
-    eor #$FFFF
-    inc a
-:   ldy #0
-@dv:
-    cmp tmp2
-    bcc @dvd
-    sec
-    sbc tmp2
-    iny
-    cpy #8
-    bne @dv
-@dvd:
-    A8
-    ; coluna = 4 + 3*(i - (7-n))
-    lda #7
-    sec
-    sbc hist_n
-    sta num_pad
-    lda loop_i
-    sec
-    sbc num_pad
-    stz num_pad
-    sta num            ; k
-    asl a
-    clc
-    adc num
-    clc
-    adc #4
-    sta num            ; coluna
-    lda tmp3+1
-    bmi @neg
-    ; positiva: linhas 16, 15, ... para cima
-    lda #16
-    sta num+1
-@pl:
-    cpy #0
-    beq @lbl
-    jsr ChartCell6
-    dec num+1
-    dey
-    bra @pl
-@neg:
-    cpy #5
-    bcc :+
-    ldy #4
-:   lda #17
-    sta num+1
-@nl:
-    cpy #0
-    beq @lbl
-    jsr ChartCell5
-    inc num+1
-    dey
-    bra @nl
-@lbl:
-    ; numero do dia embaixo (linha 22)
-    lda num
-    sta num_w+1
-    A16
-    lda s_day
-    sec
-    sbc #7
-    sta num+2
-    lda loop_i
-    and #$00FF
-    clc
-    adc num+2
-    sta num+2
-    A8
-    lda num_w+1
-    A16
-    and #$00FF
-    clc
-    adc #(22*32)
-    sta txt_pos
-    lda num+2
-    sta num
-    stz num+2
-    A8
-    lda #((4<<2)|$20)
-    sta txt_attr
-    lda #3
-    sta num_w
-    jsr PrintNum
-    inc loop_i
-    jmp @bar
-@foot:
-    PRINT TXT_G_MELHOR, 3, 24, 6
-    PRINT TXT_G_RS, 10, 24, 6
-    PRINTNUM16 tmp4, 13, 24, 6, 5
-    ldx #TXT_R_CONT
-    lda #26
-    jsr Footer
-    rts
-
-; bloco cheio na coluna num (2 tiles) e linha num+1: paleta 6 (verde) / 5 (vermelho)
-ChartCell6:
-    .a8
-    .i16
-    lda #((6<<2)|$20)
-    bra ChartCell
-ChartCell5:
-    .a8
-    .i16
-    lda #((5<<2)|$20)
-ChartCell:
-    sta txt_attr
-    phy
-    A16
-    lda num+1
-    and #$00FF
-    asl a
-    asl a
-    asl a
-    asl a
-    asl a
-    sta txt_pos
-    lda num
-    and #$00FF
-    clc
-    adc txt_pos
-    asl a
-    tax
-    A8
-    lda #FONT_BOX
-    sta bg3_buf,x
-    sta bg3_buf+2,x
-    lda txt_attr
-    sta bg3_buf+1,x
-    sta bg3_buf+3,x
-    lda #1
-    sta bg3_dirty
-    ply
-    rts
-
 ; xp necessario = 60 + 20*nivel -> tmp
 XpNeed:
     .a8
@@ -1353,118 +1225,6 @@ LevelUp:
 @done:
     rts
 
-DrawResults:
-    .a8
-    .i16
-    PRINT TXT_R_FIM, 3, 3, 5
-    PRINTNUM16 s_day, 14, 3, 5, 3
-    PRINT TXT_R_CLI, 3, 5, 4
-    PRINTNUM8 d_served, 22, 5, 4, 3
-    PRINT TXT_HUD_BAR, 25, 5, 4
-    PRINTNUM8 d_total, 26, 5, 4, 2
-    PRINT TXT_R_PERF, 3, 6, 4
-    PRINTNUM8 d_perfect, 25, 6, 4, 3
-    PRINT TXT_R_DESP, 3, 7, 4
-    PRINTNUM8 d_waste, 25, 7, 4, 3
-    lda s_level
-    cmp #TEL_LV
-    bcc :+
-    PRINT TXT_R_ENTR, 3, 8, 7
-    PRINTNUM8 d_deliv, 14, 8, 7, 3
-    PRINT TXT_R_RS, 19, 8, 7
-    PRINTNUM16 d_dvsales, 22, 8, 7, 6
-:   PRINT TXT_R_VEND, 3, 9, 4
-    PRINT TXT_R_RS, 19, 9, 4
-    PRINTNUM16 d_sales, 22, 9, 4, 6
-    PRINT TXT_R_GORJ, 3, 10, 4
-    PRINT TXT_R_RS, 19, 10, 4
-    PRINTNUM16 d_tips, 22, 10, 4, 6
-    PRINT TXT_R_OUTR, 3, 11, 4
-    PRINT TXT_R_RS, 19, 11, 4
-    PRINTNUM16 r_other, 22, 11, 4, 6
-    PRINT TXT_R_ALUG, 3, 12, 5
-    PRINT TXT_R_MRS, 18, 12, 5
-    PRINTNUM16 r_rent, 22, 12, 5, 6
-    PRINT TXT_R_SAL, 3, 13, 5
-    PRINT TXT_R_MRS, 18, 13, 5
-    PRINTNUM16 r_salary, 22, 13, 5, 6
-    ; lucro ou prejuizo
-    A16
-    lda r_profit
-    bmi @neg
-    A8
-    PRINT TXT_R_LUCRO, 3, 15, 6
-    PRINT TXT_R_RS, 19, 15, 6
-    PRINTNUM16 r_profit, 22, 15, 6, 6
-    bra @cx
-@neg:
-    .a16
-    eor #$FFFF
-    inc a
-    sta r_profit
-    A8
-    PRINT TXT_R_PREJ, 3, 15, 5
-    PRINT TXT_R_MRS, 18, 15, 5
-    PRINTNUM16 r_profit, 22, 15, 5, 6
-@cx:
-    PRINT TXT_R_CAIXA, 3, 17, 7
-    PRINT TXT_R_RS, 19, 17, 7
-    A16
-    lda s_money
-    sta num
-    lda s_money+2
-    sta num+2
-    A8
-    ldx #(17*32+21)
-    stx txt_pos
-    lda #((7<<2)|$20)
-    sta txt_attr
-    lda #7
-    sta num_w
-    jsr PrintNum
-    PRINT TXT_R_REP, 3, 18, 4
-    PRINTNUM8 s_rep, 22, 18, 4, 3
-    PRINT TXT_R_100, 25, 18, 4
-    PRINT TXT_R_NIVEL, 3, 19, 4
-    PRINTNUM8 s_level, 9, 19, 4, 2
-    PRINT TXT_R_XP, 13, 19, 4
-    PRINTNUM16 s_xp, 16, 19, 4, 5
-    PRINT TXT_HUD_BAR, 21, 19, 4
-    jsr XpNeed
-    PRINTNUM16 tmp, 22, 19, 4, 4
-    lda r_levels
-    beq :+
-    PRINT TXT_R_SUBIU, 3, 20, 6
-:   lda r_bossres
-    bne :+
-    lda r_duel
-    beq @nob
-:
-    cmp #1
-    bne :+
-    PRINT TXT_R_META_OK, 3, 21, 6
-    bra @nob
-:   PRINT TXT_R_META_NO, 3, 21, 5
-@nob:
-    PRINT TXT_R_MISSAO, 3, 22, 7
-    A16
-    lda s_mission
-    and #$00FF
-    asl a
-    tax
-    lda MissionTxt,x
-    tax
-    A8
-    ldy #(23*32+3)
-    sty txt_pos
-    lda #((6<<2)|$20)
-    sta txt_attr
-    jsr PrintStr
-    ldx #TXT_R_CONT
-    lda #26
-    jsr Footer
-    rts
-
 ResultsUpdate:
     .a8
     .i16
@@ -1481,7 +1241,8 @@ ResultsUpdate:
     lda r_page
     bne :+
     inc r_page
-    jmp DrawChart
+    jsl DrawChart
+    rts
 :
     jsr CardReset
     lda r_bossres
@@ -1514,43 +1275,43 @@ ResultsUpdate:
     bcs @lvdone
     inc a
     sta r_oldlvl
-    cmp #3
+    cmp #NV_CALABRESA
     bne :+
     lda #CARD_UN_CALAB
     jsr CardAdd
 :   lda r_oldlvl
-    cmp #6
+    cmp #NV_REQUEIJAO
     bne :+
-    lda #CARD_UN_CATUP
+    lda #CARD_UN_REQUEIJAO
     jsr CardAdd
     lda #CARD_UN_ATEND
     jsr CardAdd
     lda #CARD_UN_TEL
     jsr CardAdd
 :   lda r_oldlvl
-    cmp #7
+    cmp #NV_REFRI
     bne :+
     lda #CARD_UN_REFRI
     jsr CardAdd
 :   lda r_oldlvl
-    cmp #9
+    cmp #NV_BACON
     bne :+
     lda #CARD_UN_BACON
     jsr CardAdd
 :   lda r_oldlvl
-    cmp #10
+    cmp #NV_PUBLI
     bne :+
     lda #CARD_UN_PUBLI
     jsr CardAdd
 :   lda r_oldlvl
-    cmp #13
+    cmp #NV_LOJA
     bne :+
     lda #CARD_UN_LOJA
     jsr CardAdd
     lda #CARD_UN_PC
     jsr CardAdd
 :   lda r_oldlvl
-    cmp #21
+    cmp #NV_FRANQUIA
     bne :+
     lda #CARD_UN_FRAN
     jsr CardAdd
@@ -1746,11 +1507,7 @@ ShopInit:
     PAL_LOAD IconPal, 176, 128
     jsr OamClear
     stz menu_msg
-    lda menu_sel
-    cmp #SH_N
-    bcc :+
-    stz menu_sel
-:   jsr ShopScroll
+    jsr ShopAcha
     jsr DrawShop
     jsr ShopSprite
     jsr ScreenOn
@@ -1770,7 +1527,7 @@ ItemPrice:
     tax
     A8
     jmp (PriceFn,x)
-PriceFn: .word P0, P1, P2, P3, P4, P5, P6, P7, P9, P10, P11, P12, P13, P14, P15, P8, P8, P8, P8, P8
+PriceFn: .word P0, P1, P2, P3, P4, P5, P6, P7, P9, P10, P11, P12, P13, P14, P15, P8, P8, P8, P8, P8, P8
 
 .macro SETP val
     ldx #val
@@ -1816,7 +1573,7 @@ P3:
 P4:
     .a8
     .i16
-    lda #6
+    lda #NV_ATENDENTE
     jsr PLock
     JCS PRet
     lda s_attend
@@ -1826,7 +1583,7 @@ P4:
 P5:
     .a8
     .i16
-    lda #10
+    lda #NV_PUBLI
     jsr PLock
     JCS PRet
     lda s_ads
@@ -1836,7 +1593,7 @@ P5:
 P6:
     .a8
     .i16
-    lda #13
+    lda #NV_LOJA
     jsr PLock
     JCS PRet
     lda s_stores
@@ -1861,13 +1618,13 @@ P6:
 P7:
     .a8
     .i16
-    lda #21
+    lda #NV_FRANQUIA
     jsr PLock
     JCS PRet
     lda s_boss
     cmp #3
     bcs :+
-    lda #21
+    lda #NV_FRANQUIA
     sta lock_lv
     SETP $FFFE
     rts
@@ -1881,8 +1638,8 @@ P7:
     rts
 :   SETP 4000
     rts
-P9: ; computador de pedidos (nivel 13)
-    lda #13
+P9: ; computador de pedidos
+    lda #NV_PC
     jsr PLock
     bcs P9r
     lda s_pc
@@ -1891,8 +1648,8 @@ P9: ; computador de pedidos (nivel 13)
 :   SETP 600
 P9r:
     rts
-P10: ; motoboy extra (nivel 6)
-    lda #6
+P10: ; motoboy extra
+    lda #NV_MOTOBOY
     jsr PLock
     bcs P10r
     lda s_moto
@@ -1914,13 +1671,13 @@ fim:
     rts
 .endmacro
 P11: ; freezer
-    ITEM_UNICO 4, s_freezer, 250
+    ITEM_UNICO NV_FREEZER, s_freezer, 250
 P12: ; ar-condicionado
-    ITEM_UNICO 7, s_ar, 400
+    ITEM_UNICO NV_AR, s_ar, 400
 P13: ; musica ambiente
-    ITEM_UNICO 5, s_musica, 150
+    ITEM_UNICO NV_MUSICA, s_musica, 150
 P14: ; uniforme da marca
-    ITEM_UNICO 10, s_unif, 300
+    ITEM_UNICO NV_UNIFORME, s_unif, 300
 P15: ; reforma do salao (2 etapas)
     lda s_reforma
     cmp #2
@@ -1928,12 +1685,12 @@ P15: ; reforma do salao (2 etapas)
     jmp PMax
 :   cmp #1
     bcs :+
-    lda #8
+    lda #NV_REFORMA1
     jsr PLock
     bcs P15r
     SETP 900
     rts
-:   lda #14
+:   lda #NV_REFORMA2
     jsr PLock
     bcs P15r
     SETP 2500
@@ -1994,16 +1751,75 @@ DrawShop:
     PRINTNUM16 s_stock, 11, 4, 7, 3
     PRINT TXT_HUD_DIA, 19, 4, 7
     PRINTNUM16 s_day, 23, 4, 7, 3
-    ; itens visiveis: menu_top .. menu_top+SH_VIS-1
-    lda menu_top
-@it:
-    sta loop_i
-    ; linha = 6 + 2 * (i - topo)  (16 px por item, com icone)
-    sec
-    sbc menu_top
+    ; abas: {L} DIA  LOJA  EQUIPE  REDE {R}; a escolhida em vermelho, com pilula
+    PRINT TXT_SH_L, 2, SH_LINABA, 4
+    PRINT TXT_SH_R, 28, SH_LINABA, 4
+    stz loop_j
+@ab:
+    A16
+    lda loop_j
+    and #$00FF
+    tay
+    asl a
+    tax
+    lda ShopAbaTxt,x
+    tax
+    lda ShopAbaCol,y
+    and #$00FF
+    clc
+    adc #(SH_LINABA*32)
+    sta txt_pos
+    asl a
+    sta tmp3                ; posicao no bg3_buf (para a pilula)
+    A8
+    ldy #((4<<2)|$20)
+    lda loop_j
+    cmp shop_aba
+    bne :+
+    ldy #((5<<2)|$20)
+:   sty txt_attr
+    jsr PrintStr
+    lda loop_j
+    cmp shop_aba
+    bne @abn
+    ldx tmp3
+    stx ft_pos
+    A16
+    lda loop_j
+    and #$00FF
+    tay
+    A8
+    lda ShopAbaCol,y        ; pilula: uma coluna antes do nome ate uma depois
+    dec a
+    asl a
+    asl a
+    asl a
+    sta ft_x0
+    lda ShopAbaLen,y
+    asl a
+    asl a
     asl a
     clc
-    adc #6
+    adc ft_x0
+    sta ft_x1
+    lda #(SH_LINABA*8 - 4)
+    sta ft_y
+    jsr PilulaLiga
+@abn:
+    inc loop_j
+    lda loop_j
+    cmp #SH_ABAS
+    bne @ab
+    ; itens da aba
+    stz loop_j
+@it:
+    jsr ShopItemPos
+    sta loop_i
+    ; linha = SH_LIN0 + 2 * posicao  (16 px por item, com icone)
+    lda loop_j
+    asl a
+    clc
+    adc #SH_LIN0
     sta loop_i+1
     A16
     and #$00FF
@@ -2140,27 +1956,11 @@ DrawShop:
     sta txt_attr
     jsr PrintStr
 @np8:
-    lda loop_i
-    inc a
-    cmp #SH_N
+    inc loop_j
+    jsr ShopAbaFaixa
+    cmp loop_j
     beq :+
-    sta tmp4
-    sec
-    sbc menu_top
-    cmp #SH_VIS
-    bcs :+
-    lda tmp4
     jmp @it
-:   ; setas de rolagem
-    lda menu_top
-    beq :+
-    PRINT TXT_SH_UP, 29, 6, 5
-:   lda menu_top
-    clc
-    adc #SH_VIS
-    cmp #SH_N
-    bcs :+
-    PRINT TXT_SH_DN, 29, 16, 5
 :   ; descricao
     A16
     lda menu_sel
@@ -2170,7 +1970,17 @@ DrawShop:
     lda ShopDesc,x
     tax
     A8
-    ldy #(19*32+3)
+    lda tem_sram            ; sem SRAM: sair e abrir nao salvam (falam do password)
+    bne @dsc
+    lda menu_sel
+    cmp #SH_MENU
+    bne :+
+    ldx #TXT_SD_18N
+:   cmp #SH_ABRIR
+    bne @dsc
+    ldx #TXT_SD_19N
+@dsc:
+    ldy #((SH_LIN0+12)*32+3)
     sty txt_pos
     lda #((7<<2)|$20)
     sta txt_attr
@@ -2185,7 +1995,7 @@ DrawShop:
     lda ShopMsgs-2,x
     tax
     A8
-    ldy #(23*32+3)
+    ldy #((SH_LIN0+16)*32+3)
     sty txt_pos
     lda #((5<<2)|$20)
     sta txt_attr
@@ -2199,25 +2009,127 @@ SH_MAPA  = 16
 SH_TROF  = 17
 SH_MENU  = 18               ; voltar ao menu (titulo): salva e sai do jogo
 SH_ABRIR = 19
-SH_N     = 20
-SH_VIS   = 6               ; itens visiveis (a lista rola)
+SH_SENHA = 20               ; ver o password
+SH_N     = 21
+SH_ABAS  = 4
+SH_LINABA = 6               ; linha da barra de abas
+SH_LIN0  = 8                ; linha do primeiro item
 
 ShopMsgs: .word TXT_SM_OK, TXT_SM_SEM, TXT_SM_BLOQ, TXT_SM_REP, TXT_SM_MAX, TXT_SM_ATIVO
+
+; abas da loja: itens (indices de ShopName) na ordem em que aparecem.
+; teste/botcfg.lua (SHOP_ABAS) repete esta tabela
+ShopOrd:
+    .byte 0, 3, SH_PRECO, SH_SENHA, SH_ABRIR, SH_MENU   ; DIA
+    .byte 1, 2, 10, 11, 12, 14                  ; LOJA
+    .byte 4, 9, 13, 8                           ; EQUIPE
+    .byte 5, 6, 7, SH_MAPA, SH_TROF             ; REDE
+ShopAbaIni: .byte 0, 6, 12, 16, SH_N            ; inicio de cada aba em ShopOrd (+ fim)
+ShopAbaTxt: .word TXT_SA_0, TXT_SA_1, TXT_SA_2, TXT_SA_3
+ShopAbaCol: .byte 4, 9, 15, 23                 ; colunas na barra (linha SH_LINABA)
+ShopAbaLen: .byte 3, 4, 6, 4
+
+; aba shop_aba: X = primeiro indice em ShopOrd, A = quantidade de itens
+ShopAbaFaixa:
+    .a8
+    .i16
+    A16
+    lda shop_aba
+    and #$00FF
+    tax
+    A8
+    lda ShopAbaIni+1,x
+    sec
+    sbc ShopAbaIni,x
+    pha
+    lda ShopAbaIni,x
+    A16
+    and #$00FF
+    tax
+    A8
+    pla
+    rts
+
+; A = item na posicao loop_j da aba atual
+ShopItemPos:
+    .a8
+    .i16
+    lda loop_j
+    bra ShopItemA
+
+; menu_sel = item na posicao shop_pos da aba atual
+ShopSelPos:
+    .a8
+    .i16
+    lda shop_pos
+    jsr ShopItemA
+    sta menu_sel
+    rts
+
+; A = posicao na aba atual -> A = item
+ShopItemA:
+    .a8
+    .i16
+    pha
+    jsr ShopAbaFaixa
+    txa
+    clc
+    adc 1,s
+    A16
+    and #$00FF
+    tax
+    A8
+    pla
+    lda ShopOrd,x
+    rts
+
+; acha a aba e a posicao do item menu_sel (item fora das abas: o primeiro)
+ShopAcha:
+    .a8
+    .i16
+    ldx #0
+:   lda ShopOrd,x
+    cmp menu_sel
+    beq :+
+    inx
+    cpx #SH_N
+    bne :-
+    ldx #0
+:   txa
+    sta tmp
+    ldy #0
+:   lda ShopAbaIni+1,y
+    cmp tmp
+    beq @prox
+    bcs @ok
+@prox:
+    iny
+    bra :-
+@ok:
+    tya
+    sta shop_aba
+    lda tmp
+    sec
+    sbc ShopAbaIni,y
+    sta shop_pos
+    jmp ShopSelPos
 
 ShopSprite:
     .a8
     .i16
     jsr OamClear
-    ; icones dos itens visiveis (o escolhido pula)
-    lda menu_top
-    sta loop_j
+    ; icones dos itens da aba (o escolhido pula)
+    stz loop_j
 @ic:
-    A16
-    lda #18
-    sta spr_x
-    lda loop_j
+    jsr ShopItemPos
+    cmp #SH_SENHA
+    bne :+
+    lda #ICO_SENHA          ; o icone do item e o do menu (cadeado com chave)
+:   A16
     and #$00FF
     tax
+    lda #18
+    sta spr_x
     A8
     lda f:IconPalTab,x
     asl a
@@ -2236,13 +2148,11 @@ ShopSprite:
     adc spr_tile
     sta spr_tile
     stz spr_tile+1
-    ; y = (6 + 2 * (i - topo)) * 8 - 4
+    ; y = (SH_LIN0 + 2 * posicao) * 8 - 5
     lda loop_j
-    sec
-    sbc menu_top
     asl a
     clc
-    adc #6
+    adc #SH_LIN0
     asl a
     asl a
     asl a
@@ -2250,7 +2160,7 @@ ShopSprite:
     sbc #5
     sta spr_y
     lda loop_j
-    cmp menu_sel
+    cmp shop_pos
     bne :+
     A16
     lda frame
@@ -2267,14 +2177,10 @@ ShopSprite:
     jsr AddSprite
     stz spr_size
     inc loop_j
-    lda loop_j
-    cmp #SH_N
-    beq :+
-    sec
-    sbc menu_top
-    cmp #SH_VIS
-    bcc @ic
-:   A16
+    jsr ShopAbaFaixa
+    cmp loop_j
+    bne @ic
+    A16
     lda #206
     sta spr_x
     A8
@@ -2285,53 +2191,68 @@ ShopSprite:
     jsr MascotFrame
     jmp AddSprite32
 
-; mantem o item escolhido dentro da janela visivel
-ShopScroll:
-    .a8
-    .i16
-    lda menu_sel
-    cmp menu_top
-    bcs :+
-    sta menu_top
-    rts
-:   sec
-    sbc #(SH_VIS-1)
-    bcc :+
-    cmp menu_top
-    bcc :+
-    sta menu_top
-:   rts
-
 ShopUpdate:
     .a8
     .i16
     jsr ShopSprite
+    ; L/R (ou esquerda/direita): troca de aba
+    lda pad_new
+    and #KL_L
+    bne @al
+    lda pad_new+1
+    and #KH_LEFT
+    beq @nl
+@al:
+    lda shop_aba
+    dec a
+    bpl :+
+    lda #(SH_ABAS-1)
+:   bra @aba
+@nl:
+    lda pad_new
+    and #KL_R
+    bne @ar
+    lda pad_new+1
+    and #KH_RIGHT
+    beq @nr
+@ar:
+    lda shop_aba
+    inc a
+    cmp #SH_ABAS
+    bcc @aba
+    lda #0
+@aba:
+    sta shop_aba
+    stz shop_pos
+    bra @mudou
+@nr:
     lda pad_new+1
     and #KH_UP
     beq @nu
-    lda menu_sel
+    lda shop_pos
     dec a
-    bpl :+
-    lda #(SH_N-1)
-:   sta menu_sel
-    stz menu_msg
-    jsr ShopScroll
-    SFX SFX_CURSOR
-    jsr DrawShop
+    bpl @pos
+    jsr ShopAbaFaixa
+    dec a
+    bra @pos
 @nu:
     lda pad_new+1
     and #KH_DOWN
     beq @nd
-    lda menu_sel
+    jsr ShopAbaFaixa
+    sta tmp
+    lda shop_pos
     inc a
-    cmp #SH_N
-    bcc :+
+    cmp tmp
+    bcc @pos
     lda #0
-:   sta menu_sel
+@pos:
+    sta shop_pos
+@mudou:
+    jsr ShopSelPos
     stz menu_msg
-    jsr ShopScroll
     SFX SFX_CURSOR
-    jsr DrawShop
+    jmp DrawShop
 @nd:
     lda pad_new
     and #KL_A
@@ -2363,11 +2284,26 @@ ShopUpdate:
     lda #ST_TROF
     sta next_state
     rts
-:   cmp #SH_MENU
+:   cmp #SH_SENHA
     bne :+
+    SFX SFX_OK
+    lda #1                  ; mostra o password e volta para a loja
+    sta senha_modo
+    lda #ST_SENHA
+    sta next_state
+    rts
+:   cmp #SH_MENU
+    bne :++
     jsr SaveGame            ; salva e volta para a tela de titulo (CONTINUAR retoma)
     SFX SFX_OK
+    lda tem_sram
+    beq :+
     lda #ST_TITLE
+    sta next_state
+    rts
+:   lda #2                  ; sem SRAM: antes mostra o password
+    sta senha_modo
+    lda #ST_SENHA
     sta next_state
     rts
 :   cmp #SH_ABRIR
@@ -2535,15 +2471,7 @@ MapInit:
     .i16
     jsr FadeOut
     jsr ScreenOff
-    lda #$80
-    sta VMAIN
-    jsr UiOff
-    VRAM_LOAD MapTiles, VRAM_BG1TILES, (MapTiles_end - MapTiles)
-    VRAM_LOAD MapMap, VRAM_BG1MAP, 2048
-    jsr LoadBasePalettes
-    PAL_LOAD MapPal, 32, 32
-    jsr ClearBg3
-    jsr OamClear
+    jsr MapCarrega
     PRINT TXT_MP_TIT, 8, 1, 1
     PRINT TXT_MP_LOJAS, 2, 25, 0
     lda s_stores
@@ -2559,88 +2487,31 @@ MapInit:
     PRINT TXT_HUD_BAR, 24, 25, 0
     PRINTNUM8 tmp4, 25, 25, 0, 1
     PRINT TXT_MP_VOLTAR, 2, 26, 0
-    jsr MapUpdate
     jsr ScreenOn
     jsr FadeIn
     rts
 
-StoreXY: .byte 54,128, 114,66, 54,66, 114,128, 173,66
-FranXY:  .byte 11,31, 211,29, 11,171, 121,173, 231,121
+; mapa da expansao no BG1 (tela desligada): base com os terrenos em obra, as
+; lojas e franquias compradas por cima (MapObras) e paletas BG 2..7.
+; Usado tambem pela escolha da loja do dia
+MapCarrega:
+    .a8
+    .i16
+    lda #$80
+    sta VMAIN
+    jsr UiOff
+    VRAM_LOAD MapTiles, VRAM_BG1TILES, (MapTiles_end - MapTiles)
+    VRAM_LOAD MapMap, VRAM_BG1MAP, 2048
+    jsl MapObras
+    jsr LoadBasePalettes
+    PAL_LOAD MapPal, 32, 192
+    jsr ClearBg3
+    jmp OamClear
 
 MapUpdate:
     .a8
     .i16
-    jsr OamClear
-    lda #1
-    sta spr_size
-    ; lojas (a primeira sempre existe)
-    ldy #0
-@st:
-    tya
-    beq :+
-    dec a
-    cmp s_stores
-    bcs @stdone
-:   phy
-    A16
-    tya
-    asl a
-    tax
-    A8
-    lda StoreXY,x
-    sta spr_x
-    stz spr_x+1
-    lda StoreXY+1,x
-    sta spr_y
-    ; pulinho
-    lda frame
-    lsr a
-    lsr a
-    lsr a
-    and #$01
-    clc
-    adc spr_y
-    sta spr_y
-    A16
-    lda #SPR_LOJA
-    sta spr_tile
-    A8
-    lda #$30
-    sta spr_attr
-    jsr AddSprite
-    ply
-    iny
-    cpy #5
-    bne @st
-@stdone:
-    ldy #0
-@fr:
-    tya
-    cmp s_fran
-    bcs @frdone
-    phy
-    A16
-    tya
-    asl a
-    tax
-    A8
-    lda FranXY,x
-    sta spr_x
-    stz spr_x+1
-    lda FranXY+1,x
-    sta spr_y
-    A16
-    lda #SPR_FRANQUIA
-    sta spr_tile
-    A8
-    lda #$30
-    sta spr_attr
-    jsr AddSprite
-    ply
-    iny
-    cpy #5
-    bne @fr
-@frdone:
+    jsl MapAgua
     lda pad_new+1
     and #(KH_B|KH_START)
     bne @back
@@ -2748,7 +2619,10 @@ SlotAddr:
 SaveGame:
     .a8
     .i16
-    jsr SaveSum
+    lda tem_sram            ; cartucho sem SRAM: so o password
+    bne :+
+    rts
+:   jsr SaveSum
     lda save_slot
     jsr SlotAddr
     ldx tmp2
@@ -2783,7 +2657,10 @@ SaveGame:
 SaveTFlags:
     .a8
     .i16
-    ldx tmp2
+    lda tem_sram
+    bne :+
+    rts
+:   ldx tmp2
     phx
     ldx tmp4
     phx
@@ -2802,6 +2679,13 @@ SaveTFlags:
 HasSaveSlot:
     .a8
     .i16
+    pha
+    lda tem_sram            ; sem SRAM nao ha jogo salvo
+    bne :+
+    pla
+    clc
+    rts
+:   pla
     jsr SlotAddr
     ldx tmp2
     lda f:SRAM,x

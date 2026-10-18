@@ -16,6 +16,8 @@ ST_SLOTS   = 10
 ST_SPLASH  = 11
 ST_TROF    = 12
 ST_SECRET  = 13
+ST_SENHA   = 14
+ST_ABERTURA = 15         ; abertura RAMON (banco28.s), antes do splash
 
 CUST_Y     = 74
 BUBBLE_Y   = 54
@@ -63,13 +65,13 @@ SetupDay:
     lda #3
     sta n_flav
     lda s_level
-    cmp #3
+    cmp #NV_CALABRESA
     bcc :+
     inc n_flav
-:   cmp #6
+:   cmp #NV_REQUEIJAO
     bcc :+
     inc n_flav
-:   cmp #9
+:   cmp #NV_BACON
     bcc :+
     inc n_flav
 :   lda s_fryer
@@ -97,6 +99,7 @@ SetupDay:
     stz d_mystery
     stz d_myst_ok
     stz d_paused
+    stz aj_on
     stz msg_timer
     lda #$FF
     sta d_broke
@@ -328,25 +331,17 @@ PriceTable:  .byte 8, 7, 8, 9, 10, 11
 DrawHudStatic:
     .a8
     .i16
-    PRINT TXT_HUD_DIA, 1, 1, 0
-    PRINT TXT_HUD_RS, 10, 1, 1
-    PRINT TXT_HUD_NV, 21, 1, 0
-    PRINT TXT_HUD_DP, 29, 1, 0
-    PRINT TXT_HUD_EST, 1, 26, 0
-    PRINT TXT_HUD_REP, 14, 26, 0
-    jsr HasGoal
-    bcc :+
-    PRINT TXT_HUD_META, 22, 26, 1
-    PRINT TXT_HUD_BAR, 29, 26, 1
-    PRINTNUM8 d_goal, 30, 26, 1, 2
-:   jmp ShowMission
+    jsl HudFixo             ; banco 28: ':' da hora e a meta do dia
+    jmp ShowMission
 
+; missao na linha de avisos do rodape (espera o aviso da vez acabar)
 ShowMission:
     .a8
     .i16
-    lda #25
+    lda msg_timer
+    bne @r
+    lda #HUD_LIN_MSG
     jsr ClearRow
-    PRINT TXT_HUD_STAR, 1, 25, 1
     A16
     lda s_mission
     and #$00FF
@@ -355,96 +350,163 @@ ShowMission:
     lda MissionTxt,x
     tax
     A8
-    ldy #(25*32+3)
+    ldy #(HUD_LIN_MSG*32+3)
     sty txt_pos
-    lda #((2<<2)|$20)
+    lda #((4<<2)|$20)
     sta txt_attr
-    jmp PrintStr
+    jsr PrintStr
+    lda #1
+    sta hud_mis
+@r: rts
 
 DrawHud:
     .a8
     .i16
-    PRINTNUM16 s_day, 5, 1, 0, 3
-    A16
-    lda s_money
-    sta num
-    lda s_money+2
-    sta num+2
-    A8
-    ldx #(1*32+13)
-    stx txt_pos
-    lda #((1<<2)|$20)
-    sta txt_attr
-    lda #7
-    sta num_w
-    jsr PrintNum
-    PRINTNUM8 s_level, 24, 1, 0, 2
-    PRINTNUM8 d_hour, 27, 1, 0, 2
-    lda #FONT_0
-    sta num_pad
-    PRINTNUM8 d_min, 30, 1, 0, 2
-    PRINTNUM16 s_stock, 9, 26, 0, 3
-    PRINTNUM8 s_rep, 18, 26, 0, 3
-    jsr HasGoal
-    bcc :+
-    lda d_boss
-    cmp #1
-    bne @happy
-    PRINTNUM8 d_perfect, 26, 27, 2, 2
+    jsl HudValores
     rts
-@happy:
-    PRINTNUM8 d_happy, 26, 27, 2, 2
-:   rts
 
 ; ---------------------------------------------------------------- pausa
+; mesmo balao creme do tutorial (dim_on = 2: TutNmi/TutSprites); um emoji por item
+; (PauseSprites, depois do TutSprites) e rodape em pilula na borda de baixo.
+; AJUDA abre a ajuda (banco 28: AjudaAbre/AjudaUpdate, dim_on = 3)
+PA_LIN0 = 11                ; linha do primeiro item (os outros de 2 em 2)
+PA_N    = 3                 ; CONTINUAR, AJUDA, SAIR
+
 PauseDraw:
     .a8
     .i16
-    lda #12
-    jsr ClearRow
-    lda #13
-    jsr ClearRow
-    lda #14
-    jsr ClearRow
-    lda #15
-    jsr ClearRow
-    PRINT TXT_PAUSA, 11, 12, 1
-    PRINT TXT_PA_CONT, 9, 13, 0
-    PRINT TXT_PA_SAIR, 9, 14, 0
-    PRINT TXT_PA_AVISO, 3, 15, 3
+    jsr TutBoxClear
+    PRINT TXT_PAUSA, 4, 9, 5
+    ; itens: o escolhido em vermelho
+    lda #0
+@it:
+    pha
     A16
-    lda pause_sel
     and #$00FF
-    clc
-    adc #13
-    asl a
-    asl a
-    asl a
-    asl a
-    asl a
-    clc
-    adc #7
+    tay
     asl a
     tax
+    tya
+    asl a                   ; linha = PA_LIN0 + 2 * item
+    asl a
+    asl a
+    asl a
+    asl a
+    asl a
+    clc
+    adc #(PA_LIN0*32+7)
+    sta txt_pos
+    lda PauseTxt,x
+    tax
     A8
-    lda #FONT_ARROW
-    sta bg3_buf,x
-    lda #((1<<2)|$20)
-    sta bg3_buf+1,x
+    lda #((4<<2)|$20)
+    sta txt_attr
+    lda 1,s
+    cmp pause_sel
+    bne :+
+    lda #((5<<2)|$20)
+    sta txt_attr
+:   jsr PrintStr
+    pla
+    inc a
+    cmp #PA_N
+    bne @it
+    lda pause_sel           ; SAIR: o dia nao e salvo
+    cmp #(PA_N-1)
+    bne :+
+    PRINT TXT_PA_AVISO, 7, PA_LIN0+5, 4
+:   ldx #TXT_TIT_AJ
+    lda #(PA_LIN0+7)
+    jmp Footer
+PauseTxt: .word TXT_PA_CONT, TXT_PA_AJUDA, TXT_PA_SAIR
+
+; icones dos itens (chamada pelo TutSprites, depois de esconder os sprites do jogo)
+PauseSprites:
+    .a8
+    .i16
+    lda aj_on
+    beq :+
+    jsl AjudaSprites
     rts
+:   lda #0
+@l: pha
+    A16
+    lda #32
+    sta spr_x
+    lda 1,s
+    and #$00FF
+    asl a
+    tax
+    lda PauseIco,x
+    sta spr_tile
+    A8
+    lda 1,s                 ; y = (PA_LIN0 + 2 * item) * 8 - 4
+    asl a
+    asl a
+    asl a
+    asl a
+    clc
+    adc #(PA_LIN0*8-4)
+    sta spr_y
+    lda 1,s
+    cmp pause_sel
+    bne :+
+    A16
+    lda frame
+    lsr a
+    and #$001F
+    tax
+    A8
+    lda f:UiBob,x
+    clc
+    adc spr_y
+    sta spr_y
+:   lda #$30
+    sta spr_attr
+    lda #1
+    sta spr_size
+    jsr AddSprite
+    stz spr_size
+    pla
+    inc a
+    cmp #PA_N
+    bne @l
+    rts
+PauseIco: .word SPR_PAUSA_CONT, SPR_PAUSA_AJUDA, SPR_PAUSA_SAIR
 
 PauseMenu:
     .a8
     .i16
-    lda pad_new+1
-    and #(KH_UP|KH_DOWN|KH_SEL)
+    lda aj_on
     beq :+
+    jsl AjudaUpdate
+    rts
+:   lda pad_new+1
+    and #KH_UP
+    beq @nu
     lda pause_sel
-    eor #1
+    dec a
+    bpl @sel
+    lda #(PA_N-1)
+    bra @sel
+@nu:
+    lda pad_new+1
+    and #(KH_DOWN|KH_SEL)
+    beq @nd
+    lda pause_sel
+    inc a
+    cmp #PA_N
+    bcc @sel
+    lda #0
+@sel:
     sta pause_sel
     SFX SFX_CURSOR
     jsr PauseDraw
-:   lda pad_new+1
+@nd:
+    lda pad_new+1
+    and #KH_B
+    bne @cont               ; B: volta ao jogo
+    lda pad_new+1
     and #KH_START
     bne @ok
     lda pad_new
@@ -453,17 +515,15 @@ PauseMenu:
     rts
 @ok:
     lda pause_sel
+    beq @cont
+    cmp #1
     bne @sair
+    jsl AjudaAbre
+    rts
+@cont:
     stz d_paused
     stz dim_on
-    lda #12
-    jsr ClearRow
-    lda #13
-    jsr ClearRow
-    lda #14
-    jsr ClearRow
-    lda #15
-    jsr ClearRow
+    jsr TutBoxClear
     SFX SFX_CURSOR
     rts
 @sair:
@@ -559,8 +619,9 @@ Tutorial:
     lda frame
     and #$1F
     bne @r
-    lda #2
+    lda #HUD_LIN_MSG
     jsr ClearRow
+    stz hud_mis
     A16
     lda tut_step
     and #$00FF
@@ -569,9 +630,9 @@ Tutorial:
     lda TutTxt,x
     tax
     A8
-    ldy #(2*32+1)
+    ldy #(HUD_LIN_MSG*32+1)
     sty txt_pos
-    lda #((1<<2)|$20)
+    lda #((4<<2)|$20)
     sta txt_attr
     jsr PrintStr
 @r: rts
@@ -635,12 +696,12 @@ TutBox:
 TutBoxClear:
     .a8
     .i16
-    lda #9
+    lda #9                  ; linhas 9..18 (o rodape da pausa fica na 18)
 @l: pha
     jsr ClearRow
     pla
     inc a
-    cmp #18
+    cmp #19
     bne @l
     rts
 
@@ -689,16 +750,16 @@ HasGoal:
 @y: sec
     rts
 
-; X = texto; mensagem na linha 2 (boa = amarela)
+; X = texto; aviso na linha de avisos do rodape, no lugar da missao (boa = verde)
 ShowMsg:
     .a8
     .i16
-    lda #1
+    lda #6
     bra ShowMsgP
 ShowMsgBad:
     .a8
     .i16
-    lda #3
+    lda #5
 ShowMsgP:
     .a8
     .i16
@@ -707,14 +768,15 @@ ShowMsgP:
     asl a
     ora #$20
     sta txt_attr
-    lda #2
+    lda #HUD_LIN_MSG
     jsr ClearRow
-    ldx #(2*32+1)
+    ldx #(HUD_LIN_MSG*32+1)
     stx txt_pos
     plx
     jsr PrintStr
     lda #150
     sta msg_timer
+    stz hud_mis
     rts
 
 MsgUpdate:
@@ -724,8 +786,7 @@ MsgUpdate:
     beq :+
     dec msg_timer
     bne :+
-    lda #2
-    jsr ClearRow
+    jmp ShowMission         ; o aviso acabou: volta a missao
 :   rts
 
 ; ---------------------------------------------------------------- atualizacao
@@ -747,6 +808,7 @@ DayUpdate:
     beq :+
     lda #1
     sta d_paused
+    inc a                   ; balao do tutorial
     sta dim_on
     stz pause_sel
     jsr PauseDraw
@@ -1107,7 +1169,7 @@ ActionA:
     sbc n_flav
     jmp TakeFromBasket
 
-COMBO_LV = 7
+COMBO_LV = NV_REFRI
 
 ; A = sabor: confere estoque/cesto e abre o minijogo de fechar o pastel
 StartFry:
@@ -1204,10 +1266,10 @@ MiniStart:
     .i16
     lda s_level
     ldy #2
-    cmp #6
+    cmp #NV_MG3
     bcc :+
     ldy #3
-    cmp #13
+    cmp #NV_MG4
     bcc :+
     ldy #4
 :   lda mg_mode
@@ -1243,6 +1305,7 @@ MiniStart:
     A8
     lda #1
     sta mg_on
+    jsl MgaInicio           ; animacao grande da montagem (banco28.s)
     SFX SFX_CURSOR
     jmp MiniDraw
 
@@ -1276,12 +1339,13 @@ MiniGame:
     A8
     beq @errou
     inc mg_pos
+    jsl MgaAcerto
     lda mg_pos
     cmp mg_len
     bcs @ok
     SFX SFX_CURSOR
 @draw:
-    jmp MiniDraw
+    jmp MiniAviso
 @errou:
     lda tut_step            ; tutorial: so avisa e espera o botao certo
     cmp #$FF
@@ -1306,6 +1370,7 @@ MiniGame:
     jmp PutInFryer
 @fail:
     stz mg_on
+    jsl MgaErro             ; desfecho de erro da animacao (melhoria 11: lixeira)
     lda mg_mode
     beq :+
     ldx #TXT_M_NAODEU
@@ -1327,17 +1392,36 @@ MiniGame:
     SFX SFX_LIXO
     rts
 
-; linha 2: aviso; linha 3: sequencia isolada (verde = feito, amarelo = atual)
+; a cada quadro: so reimprime o aviso se a linha nao estiver mostrando ele (um aviso
+; de cliente pode ter escrito por cima). Reimprimir todo quadro pesava no tempo que
+; sobra para o envio do audio
+MiniAviso:
+    .a8
+    .i16
+    lda msg_timer
+    ora hud_mis
+    bne MiniDraw
+    ldx #TXT_M_FECHE
+    lda mg_mode
+    beq :+
+    ldx #TXT_M_CONSERTE
+:   lda a:0,x               ; 1a letra do aviso ja esta na linha?
+    cmp bg3_buf+(HUD_LIN_MSG*32+1)*2
+    bne MiniDraw
+    rts
+
+; aviso do minijogo na linha de avisos do rodape (os botoes sao sprites)
 MiniDraw:
     .a8
     .i16
-    lda #2
+    lda #HUD_LIN_MSG
     jsr ClearRow
+    stz hud_mis
     lda mg_mode
     beq :+
-    PRINT TXT_M_CONSERTE, 1, 2, 3
+    PRINT TXT_M_CONSERTE, 1, HUD_LIN_MSG, 5
     bra :++
-:   PRINT TXT_M_FECHE, 1, 2, 1
+:   PRINT TXT_M_FECHE, 1, HUD_LIN_MSG, 4
 :   stz msg_timer
     rts
 
@@ -2192,7 +2276,7 @@ DaySpawn:
     lda d_mystery
     bne @normal
     lda s_level
-    cmp #4
+    cmp #NV_MISTERIO
     bcc @normal
     lda #100
     phx
@@ -2225,7 +2309,7 @@ DaySpawn:
     sta c_order,x
     ; turista (nivel 3+, 15%): pede o sabor mais caro
     lda s_level
-    cmp #3
+    cmp #NV_TURISTA
     bcc @noTur
     phx
     lda #100
@@ -2245,7 +2329,7 @@ DaySpawn:
 @noTur:
     ; pedido duplo (nivel 4+): 25% (residencial 40%)
     lda s_level
-    cmp #4
+    cmp #NV_DUPLO
     bcc @noqty
     phx
     lda #100
@@ -2696,6 +2780,7 @@ CursorPos:
 DayDraw:
     .a8
     .i16
+    jsl HudSprites          ; emojis do HUD (na frente dos outros sprites)
     jsr MiniSprites
     ; cursor (balanca)
     jsr CursorPos
@@ -2718,6 +2803,7 @@ DayDraw:
     lda #1
     sta spr_size
     jsr AddSprite
+    jsl MaoSprites          ; mao ao lado do cursor com o que o jogador segura
     ; item na mao (no rodape e acima do fundador)
     lda hold_flav
     cmp #$FF
@@ -2750,7 +2836,7 @@ DayDraw:
     adc #8
     sta spr_x
     A8
-    lda #162
+    lda #158                ; pastel na mao do fundador (FND_Y - 6)
     sta spr_y
     jsr AddSprite
 @nohold:
@@ -2778,7 +2864,7 @@ DayDraw:
     lda #SPR_REFRI_P
     sta spr_tile
     A8
-    lda #166
+    lda #162
     sta spr_y
     stz spr_size
     jsr AddSprite
@@ -2808,7 +2894,7 @@ DayDraw:
     clc
     adc #168
     sta spr_y
-    lda #$32
+    lda #$22                ; prioridade 2: atras do painel da HUD (linhas 25+ do BG1)
     sta spr_attr
     jsr AddSprite32
 @nomasc:
@@ -2826,15 +2912,15 @@ DayDraw:
     lda #SPR_FOUNDER_1
     sta spr_tile
     A8
-:   lda #168
-    sta spr_y
+:   lda #163                ; os pes ficam na borda de cima do painel da HUD (y 196)
+    sta spr_y               ; (o desenho comeca 1 px abaixo do topo do sprite)
     lda masc_t
     and #$04
     beq :+
-    lda #164
+    lda #159
     sta spr_y
 :
-    lda #$34
+    lda #$24                ; prioridade 2: atras do painel da HUD (linhas 25+ do BG1)
     sta spr_attr
     jsr AddSprite32
     jsr DrawCoin
@@ -2843,6 +2929,7 @@ DayDraw:
     jsr DrawBins
     jsr DrawBubbles
     jsr DrawBaskets
+    jsl AnimSprites         ; animacao grande: anda e poe os sprites atras do cartao
     rts
 
 DigTiles: .word SPR_DIG_0, SPR_DIG_1, SPR_DIG_2, SPR_DIG_3, SPR_DIG_4, SPR_DIG_5, SPR_DIG_6, SPR_DIG_7, SPR_DIG_8, SPR_DIG_9
@@ -2910,7 +2997,7 @@ DrawPopup:
     jmp AddSprite
 
 ; ================================================================ ENTREGAS (telefone e aplicativo)
-TEL_LV = 6
+TEL_LV = NV_TELEFONE
 
 ; maximo de comandas abertas: 2 (so telefone) ou 3 (com computador)
 DvMax:
@@ -3439,7 +3526,7 @@ DrawCoin:
     ; aproxima 1/4 do caminho por quadro (destino: dinheiro no topo)
     lda coin_y
     sec
-    sbc #2
+    sbc #HUD_ICO_Y
     lsr a
     lsr a
     sta tmp
@@ -3448,7 +3535,7 @@ DrawCoin:
     sbc tmp
     sta coin_y
     A16
-    lda #104
+    lda #HUD_RS_ICOX
     sec
     sbc coin_x
     cmp #$8000
@@ -3986,6 +4073,25 @@ DrawBaskets:
 @nosmoke:
     lda #$32
     sta spr_attr
+    jsr AddSprite
+    ; sabor (8x8) no vao a direita do pastel
+    ldx tmp3
+    lda f_flav,x
+    clc
+    adc #<SPR_MINI
+    sta spr_tile
+    lda #>SPR_MINI
+    sta spr_tile+1
+    lda tmp4
+    clc
+    adc #18
+    sta spr_x
+    stz spr_x+1
+    lda #(PASTEL_Y+4)
+    sta spr_y
+    lda #$30
+    sta spr_attr
+    stz spr_size
     jsr AddSprite
     ; barra de fritura (cor: verde=perfeito, vermelho=queimado, amarelo=outros)
     lda tmp

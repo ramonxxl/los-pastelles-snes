@@ -1,7 +1,9 @@
 ; =====================================================================
 ;  Segredos: codigo classico na tela de titulo (cima cima baixo baixo
 ;  esq dir esq dir B A) abre o menu secreto. O jogo salvo que usar o
-;  menu fica em "modo festa" e nao ganha mais trofeus.
+;  menu fica em "modo festa" e nao ganha mais trofeus. O mesmo codigo na
+;  tela de digitar o password (pw_festa) abre o menu com o jogo do password,
+;  o que serve tambem para cartuchos sem SRAM.
 ; =====================================================================
 
 FESTA_BIT = $02         ; s_tflags: usou o menu secreto
@@ -97,6 +99,13 @@ SecretDraw:
     lda SecretTxt,x
     tax
     A8
+    lda loop_i              ; sem SRAM (so pelo password) nao ha o que salvar
+    cmp #5
+    bne :+
+    lda tem_sram
+    bne :+
+    ldx #TXT_SEC_5N
+:
     lda #((4<<2)|$20)
     sta txt_attr
     lda loop_i
@@ -201,10 +210,7 @@ SecretUpdate:
     lda pad_new+1
     and #KH_B
     beq :+
-    SFX SFX_CURSOR
-    lda #ST_TITLE
-    sta next_state
-    rts
+    bra @sair
 :   lda pad_new
     and #KL_A
     bne :+
@@ -214,13 +220,27 @@ SecretUpdate:
     bcc @truque
     bne @sair
     ; salvar e jogar
-    jsr SaveGame
     SFX SFX_OK
+    lda pw_festa
+    beq @salva
+    ; jogo do password: com SRAM escolhe onde salvar; sem, segue para o dia
+    stz pw_festa
+    lda tem_sram
+    beq @joga
+    lda #3
+    sta sl_mode
+    lda #ST_SLOTS
+    sta next_state
+    rts
+@salva:
+    jsr SaveGame
+@joga:
     lda #ST_PREDAY
     sta next_state
     rts
 @sair:
     SFX SFX_CURSOR
+    stz pw_festa
     lda #ST_TITLE
     sta next_state
     rts

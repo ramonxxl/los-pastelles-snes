@@ -55,6 +55,8 @@ d_patrate:  .res 2
 d_speed:    .res 2
 d_xp:       .res 2
 msg_timer:  .res 1
+hud_mis:    .res 1      ; 1 = a linha de avisos do rodape mostra a missao (com a estrela)
+hud_w:      .res 1      ; HudNum: largura do numero
 
 n_flav:     .res 1
 n_fry:      .res 1
@@ -118,6 +120,10 @@ tut_box:    .res 1
 tut_shown:  .res 1
 fry_lim:    .res 2      ; teto do progresso da fritura (no tutorial para no ponto)
 pause_sel:  .res 1
+aj_on:      .res 1      ; ajuda da pausa aberta
+aj_aba:     .res 1      ; ajuda: aba (0..AJ_ABAS-1)
+aj_pag:     .res 1      ; ajuda: pagina dentro da aba
+aj_sc:      .res 1      ; ajuda: BG2SC (mapa com ou sem o desenho do controle)
 splash_t:   .res 2
 masc_t:     .res 1
 opt_diff:   .res 1
@@ -179,7 +185,54 @@ card_next:  .res 1
 
 ; menus
 menu_sel:   .res 1
-menu_top:   .res 1
+shop_aba:   .res 1      ; loja: aba escolhida
+shop_pos:   .res 1      ; loja: posicao do cursor na aba
+; password (banco 28, gerador/senha.js)
+tem_sram:   .res 1      ; 1 = o cartucho tem SRAM (SramDetecta no boot)
+senha_modo: .res 1      ; tela do password: 0 digitar, 1 mostrar (volta a loja), 2 mostrar e sair
+pw_buf:     .res 13     ; os bits do password (SENHA_N * 5)
+pw_sym:     .res 32     ; simbolos 0..31 (indices de SenhaAlfa)
+pw_pos:     .res 2      ; posicao do bit em pw_buf
+pw_v:       .res 4      ; valor de um campo / bits lidos
+pw_n:       .res 1      ; quantos bits
+pw_cur:     .res 1      ; digitar: quantos simbolos ja foram digitados
+pw_tecla:   .res 1      ; digitar: tecla escolhida (0..31)
+pw_msg:     .res 1      ; 1 = password invalido
+pw_festa:   .res 1      ; 1 = codigo secreto digitado no password (START abre o menu secreto)
+pw_bdel:    .res 1      ; o B do codigo secreto apagou um simbolo (o A final devolve)
+pw_trof:    .res 1      ; s_trof bits 5..7
+pw_tflags:  .res 1      ; s_tflags bits 0..2
+pw_versao:  .res 1
+pw_lfsr:    .res 2
+pw_crc:     .res 2
+pw_ver:     .res 2      ; verificacao
+pw_str:     .res 32     ; texto para PrintStr (2 linhas)
+pw_big:     .res 12     ; o numero em base mista (little endian)
+pw_t:       .res 12
+pw_rad:     .res 2      ; base do campo
+pw_r2:      .res 2
+pw_dig:     .res 2      ; digito do campo
+pw_rem:     .res 4
+pw_cnt:     .res 2
+pw_i:       .res 2      ; indice do bit no numero grande
+pw_tipo:    .res 1
+pw_tam:     .res 2      ; bytes do campo
+pw_adr:     .res 2      ; endereco do campo
+pw_x:       .res 2      ; deslocamento do campo na tabela
+pw_digs:    .res 64     ; digitos lidos (SenhaLe)
+pw_ch:      .res 2      ; um caractere + fim (tecla do teclado)
+tit_lin:    .res 1
+hud_forca:  .res 1      ; HUD: reimprimir os numeros no proximo quadro
+hud_muda:   .res 1      ; HUD: bits dos numeros a reimprimir (HudGrp)
+hud_ant:    .res 34     ; HUD: os valores ja impressos (HudSig, um por palavra)      ; titulo: linha do 1o item (sobe com 4 itens)
+; animacao grande no BG2 (banco28.s, AnimMostra...): 0 = nao, 1 = na tela, 2 = sumindo
+anim_vis:   .res 1
+anim_ok:    .res 1      ; 1 = o quadro atual ja foi para a VRAM (pode mostrar)
+anim_cur:   .res 1      ; quadro atual (indice em AnimQuadro)
+anim_tgt:   .res 1      ; quadro alvo (anda 1 quadro a cada ANIM_VEL quadros de video)
+anim_t:     .res 1
+anim_sujo:  .res 1      ; 1 = a NMI precisa mandar os tiles de anim_cur
+anim_fim:   .res 1      ; quadros parado no alvo antes de sumir (0 = fica)
 loop_i:     .res 2
 loop_j:     .res 1
 lock_lv:    .res 2
@@ -252,3 +305,10 @@ ft_code:    .res 1      ; glifo esperado ali (se mudar, a pilula some)
 ft_x0:      .res 1
 ft_x1:      .res 1      ; x da peca da direita
 ft_y:       .res 1
+; abertura "RAMON" (banco28.s)
+ab_on:      .res 1      ; 1 = a NMI aplica a rolagem e as camadas da abertura
+ab_t:       .res 2      ; quadros desde o inicio
+ab_pal:     .res 1      ; proxima paleta da tabela (AbPalQ)
+ab_h:       .res 2      ; rolagem da cortina (BG1)
+ab_v:       .res 2
+ab_fx:      .res 2      ; entrada do mapa da faisca neste quadro

@@ -82,6 +82,7 @@ end
 
 emu.addEventCallback(function()
   f = f + 1
+  if BOT_DESLIGADO then return end          -- o script de teste assumiu o controle
   local st = r8("state")
   if st ~= laststate then
     log:write(string.format("f=%d state=%d dia=%d caixa=%d nivel=%d xp=%d rep=%d estoque=%d missao=%d boss=%d fry=%d cnt=%d\n",
@@ -106,9 +107,9 @@ emu.addEventCallback(function()
     elseif (st == 1 and f > 250) or st == 2 or (st == 5 and stf > 100) then if f % 30 == 0 then b = "a"; if st == 2 and CARDSHOT then shot("card") end end
     elseif st == 4 and PAUSETEST and tirou["pausa"] and not tirou["pausa2"] then
       if r8("d_paused") == 0 then b = "start" else tirou["pausa2"] = true; shot("pausa") end
-    elseif st == 4 then b = botday()
+    elseif st == 4 then if not BOT_PARADO then b = botday() end   -- BOT_PARADO: o script de teste controla
     elseif st == 6 then
-      if r8("menu_sel") >= 12 and not tirou["lojarola"] then tirou["lojarola"] = true; shot("loja_rolando") end
+      if r8("shop_aba") == 1 and stf > 60 and not tirou["loja_aba"] then tirou["loja_aba"] = true; shot("loja_aba") end
       b = SHOP(r8, r16, f)
     elseif st == 7 then if f % 120 == 0 then b = "b" end
     elseif st == 8 then if f % 60 == 0 then b = "b" end

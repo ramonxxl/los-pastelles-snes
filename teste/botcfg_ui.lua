@@ -12,7 +12,8 @@ function SHOP(r8, r16, f)
     if sel == 1 and esperou < 120 then return nil end
     if sel == 13 then if esperou < 120 then return nil end fase = 1 end
     if f % 12 ~= 0 then return nil end
-    if sel < 13 then return "down" end
+    local b = SHOP_IR(r8, 13)
+    if b then return b end
   end
   return SHOP0(r8, r16, f)
 end
