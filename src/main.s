@@ -508,6 +508,7 @@ ScreenOff:
     sta INIDISP
     lda #$01
     sta NMITIMEN
+    stz HDMAEN          ; nenhuma DMA de carga com HDMA ligado (S-CPU versao 1)
     rts
 ScreenOn:
     .a8
